@@ -1,0 +1,224 @@
+/**
+ * Web app global stylesheet — dark-themed Linear-inspired.
+ *
+ * Imports the shared design tokens from @ghost/shared (light defaults the
+ * extension still uses for its Shadow-DOM overlay on LinkedIn/Indeed), then
+ * overrides the visual tokens at the web-app root for dark mode. The
+ * extension is untouched — it still imports @ghost/shared/theme.css directly
+ * and renders on light host pages.
+ *
+ * tw-animate-css gives us the shadcn-recommended Tailwind v4 animation
+ * companion (accordion-down/up, slide-in/out, etc.) for primitives like
+ * Dialog and Sheet.
+ */
+
+@import "@ghost/shared/theme.css";
+@import "tw-animate-css";
+
+/* Dark-theme overrides — applied at :root so every CSS-var consumer in the
+   web app picks them up. Extension imports the same upstream theme.css but
+   never sees this file. */
+:root {
+  /* Surfaces — neutral very-dark with a faint blue tint to match brand hue */
+  --color-surface:          oklch(0.16 0.005 260);
+  --color-surface-subtle:   oklch(0.20 0.006 260);
+  --color-surface-elevated: oklch(0.23 0.008 260);
+  --color-surface-glass:    oklch(0.18 0.005 260 / 0.7);
+
+  /* Borders — visible but quiet on dark surfaces */
+  --color-border:        oklch(0.28 0.008 260);
+  --color-border-strong: oklch(0.38 0.01 260);
+  --color-border-focus:  oklch(0.55 0.18 260);
+
+  /* Ink */
+  --color-ink:           oklch(0.97 0.005 260);
+  --color-ink-muted:     oklch(0.65 0.01 260);
+  --color-ink-subtle:    oklch(0.48 0.008 260);
+
+  /* Brand — slightly more luminous in dark mode for proper contrast */
+  --color-brand:         oklch(0.68 0.20 260);
+  --color-brand-strong:  oklch(0.75 0.22 260);
+  --color-brand-glow:    oklch(0.65 0.24 260);
+
+  /* Band text variants — RISK_COLORS would be too dark on this background.
+     These are tuned for the dark surface, used wherever BAND_DEEP_TEXT was used
+     against light backgrounds. */
+  --color-risk-legitimate-fg: oklch(0.80 0.18 145);
+  --color-risk-caution-fg:    oklch(0.86 0.16 95);
+  --color-risk-suspicious-fg: oklch(0.78 0.17 50);
+  --color-risk-ghost-fg:      oklch(0.78 0.19 28);
+
+  /* Shadows — Linear-style soft glows + elevation. No heavy drop shadows. */
+  --shadow-overlay:
+    0 0 0 1px oklch(0.30 0.008 260 / 0.6),
+    0 8px 24px -8px oklch(0 0 0 / 0.6),
+    0 24px 64px -16px oklch(0 0 0 / 0.5);
+
+  --shadow-elevation-1: 0 1px 0 0 oklch(1 0 0 / 0.04) inset, 0 1px 2px 0 oklch(0 0 0 / 0.4);
+  --shadow-elevation-2: 0 1px 0 0 oklch(1 0 0 / 0.06) inset, 0 2px 8px -2px oklch(0 0 0 / 0.5);
+  --shadow-glow-brand:  0 0 0 1px oklch(0.55 0.18 260 / 0.4), 0 0 32px -8px oklch(0.65 0.24 260 / 0.5);
+
+  --ring-focus: 0 0 0 3px oklch(0.55 0.18 260 / 0.5);
+
+  /* shadcn-compatible semantic tokens (used by Dialog/Sheet/Tooltip etc.) */
+  --background:  var(--color-surface);
+  --foreground:  var(--color-ink);
+  --card:        var(--color-surface-elevated);
+  --card-foreground: var(--color-ink);
+  --popover:     var(--color-surface-elevated);
+  --popover-foreground: var(--color-ink);
+  --primary:     var(--color-brand);
+  --primary-foreground: var(--color-ink);
+  --secondary:   var(--color-surface-subtle);
+  --secondary-foreground: var(--color-ink);
+  --muted:       var(--color-surface-subtle);
+  --muted-foreground: var(--color-ink-muted);
+  --accent:      var(--color-surface-subtle);
+  --accent-foreground: var(--color-ink);
+  --destructive: oklch(0.65 0.22 28);
+  --destructive-foreground: var(--color-ink);
+  --border:      var(--color-border);
+  --input:       var(--color-border);
+  --ring:        var(--color-border-focus);
+  --radius:      0.5rem;
+}
+
+html, body {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background-image:
+    radial-gradient(
+      ellipse 80% 50% at 50% -20%,
+      oklch(0.65 0.20 260 / 0.18) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse 60% 40% at 80% 30%,
+      oklch(0.65 0.22 285 / 0.10) 0%,
+      transparent 60%
+    );
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  min-height: 100vh;
+}
+
+/* Selection color tinted to brand */
+::selection {
+  background: oklch(0.55 0.18 260 / 0.4);
+  color: var(--color-ink);
+}
+
+/* Scrollbar — Linear-style thin, brand-tinted on track-hover */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border-strong);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+}
+
+/* Shimmer keyframe — used by skeleton loaders for a moving sheen effect. */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Aurora utility — for hero blocks that want a soft radial brand glow behind
+   their content. Apply to a relatively-positioned wrapper. */
+.aurora-bg {
+  position: relative;
+  isolation: isolate;
+}
+.aurora-bg::before {
+  content: '';
+  position: absolute;
+  inset: -20% -10% auto -10%;
+  height: 60%;
+  background:
+    radial-gradient(
+      ellipse 60% 100% at 30% 50%,
+      oklch(0.65 0.24 260 / 0.25) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse 50% 80% at 70% 40%,
+      oklch(0.65 0.22 290 / 0.18) 0%,
+      transparent 60%
+    );
+  z-index: -1;
+  pointer-events: none;
+  filter: blur(40px);
+}
+
+/* Gradient hairline — used on cards / panels that need a subtle premium edge */
+.ring-hairline {
+  position: relative;
+}
+.ring-hairline::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    180deg,
+    oklch(1 0 0 / 0.08),
+    oklch(1 0 0 / 0.02) 50%,
+    oklch(1 0 0 / 0)
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* GPU-promotion hint for the ScoreDial indicator circle — mirrors the
+   defense-in-depth rule in the extension's overlay.css shadow-DOM reset.
+   Targets only the indicator circle via [data-indicator] so the background
+   track circle is not promoted unnecessarily. The inline willChange style on
+   the React element is the primary signal; this rule reinforces it globally. */
+circle[data-indicator] {
+  will-change: transform;
+}
+
+/* Phase 5 — global reduced-motion override.
+   UI-SPEC §Motion line 1034: any user with prefers-reduced-motion: reduce
+   gets transition: none + animation: none across every element. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
+  body {
+    background-image: none;
+  }
+}
