@@ -1,0 +1,26 @@
+{
+  "name": "ghost-job-detector",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI-powered Chrome extension + Next.js web app that scores LinkedIn/Indeed job postings 0-100 for legitimacy.",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "lint": "turbo run lint",
+    "format": "biome format --write ."
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "packageManager": "npm@11.9.0",
+  "devDependencies": {
+    "@biomejs/biome": "^2.0.0",
+    "turbo": "^2.9.10",
+    "typescript": "^5.7.0"
+  }
+}
