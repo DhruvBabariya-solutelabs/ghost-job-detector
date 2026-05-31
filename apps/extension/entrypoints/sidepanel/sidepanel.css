@@ -1,0 +1,38 @@
+/**
+ * Side-panel stylesheet — shares the popup's premium design system, with a
+ * fluid width (the panel can be widened by the user) and a two-pane layout that
+ * collapses to a single column on narrow panels.
+ */
+
+@import "../../src/ui/theme.css";
+
+html,
+body {
+  width: 100%;
+  min-height: 100vh;
+  background: var(--bg);
+  overflow-x: hidden;
+}
+
+/* Two-pane: gauge + history (left) | signal detail (right). */
+.gjd-panes {
+  display: grid;
+  grid-template-columns: minmax(0, 360px) 1fr;
+  gap: 28px;
+  align-items: start;
+}
+
+/* Grid items default to min-width:auto and refuse to shrink below their
+   content (e.g. nowrap+ellipsis history titles), forcing the track wider than
+   the panel and producing a horizontal scrollbar. Let them shrink. */
+.gjd-panes > * {
+  min-width: 0;
+}
+
+/* Collapse to a single column on narrow side-panels. */
+@media (max-width: 720px) {
+  .gjd-panes {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}

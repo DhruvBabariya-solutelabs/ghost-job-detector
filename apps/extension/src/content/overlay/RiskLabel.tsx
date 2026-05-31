@@ -18,7 +18,6 @@
 import type { ReactElement } from 'react';
 import type { RiskBand } from '@ghost/shared';
 import { RISK_BANDS, RISK_COLORS } from '@ghost/shared';
-import { BAND_DEEP_TEXT } from './labels.js';
 
 export interface RiskLabelProps {
   band: RiskBand;
@@ -124,17 +123,18 @@ export function RiskLabel({ band }: RiskLabelProps) {
   }
 
   const Icon = BAND_ICONS[band];
-  const deep = BAND_DEEP_TEXT[band];
   const accent = RISK_COLORS[band];
+  // Bright accent text reads on the dark glass (replaces the light-mode deep text).
+  const brightText = `color-mix(in oklch, ${accent} 72%, white)`;
 
   return (
     <div className="flex justify-center mt-3">
       <span
         className="inline-flex items-center gap-1.5 pl-2.5 pr-3 py-1 rounded-full text-[15px] font-semibold border"
         style={{
-          backgroundColor: `color-mix(in oklch, ${accent} 14%, transparent)`,
-          borderColor: `color-mix(in oklch, ${accent} 26%, transparent)`,
-          color: deep,
+          backgroundColor: `color-mix(in oklch, ${accent} 20%, transparent)`,
+          borderColor: `color-mix(in oklch, ${accent} 42%, transparent)`,
+          color: brightText,
         }}
       >
         <Icon className="w-4 h-4" />

@@ -24,11 +24,11 @@ export type RpcRequest =
  * sets are disjoint.
  */
 export type RpcResponse =
-  | { ok: true; data: AnalyzeResponse }                            // ANALYZE + LOAD_DEMO
-  | { ok: true; history: HistoryEntry[] }                          // GET_HISTORY
-  | { ok: true }                                                   // TEST_KEY success
-  | { ok: false; error: string }                                   // generic try/catch path
-  | { ok: false; reason: 'invalid' | 'rate_limit' | 'network' };   // TEST_KEY specific failures
+  | { ok: true; data: AnalyzeResponse } // ANALYZE + LOAD_DEMO
+  | { ok: true; history: HistoryEntry[] } // GET_HISTORY
+  | { ok: true } // TEST_KEY success
+  | { ok: false; error: string } // generic try/catch path
+  | { ok: false; reason: 'invalid' | 'rate_limit' | 'network' }; // TEST_KEY specific failures
 
 /**
  * Single history record persisted to chrome.storage.local['gjd:history'].

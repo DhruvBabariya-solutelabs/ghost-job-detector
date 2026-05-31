@@ -1,10 +1,10 @@
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
-import './options.css';
+import './sidepanel.css';
 
 const container = document.getElementById('root');
 if (!container) {
-  throw new Error('Options #root container missing.');
+  throw new Error('Side-panel #root container missing — index.html is corrupt.');
 }
 
 createRoot(container).render(<App />);

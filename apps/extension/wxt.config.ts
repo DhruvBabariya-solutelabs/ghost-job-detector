@@ -33,7 +33,10 @@ export default defineConfig({
     name: 'Ghost Job Detector',
     description:
       'AI-powered trust-scoring overlay for LinkedIn and Indeed job postings. BYOK OpenRouter key required for AI signals.',
-    permissions: ['storage'],
+    // 'sidePanel' enables the expanded gauge + history / signal-detail layout
+    // opened from the popup header (chrome.sidePanel.open). WXT auto-adds
+    // side_panel.default_path from entrypoints/sidepanel/.
+    permissions: ['storage', 'sidePanel'],
     host_permissions: [
       'https://*.linkedin.com/*',
       'https://*.indeed.com/*',
@@ -43,6 +46,16 @@ export default defineConfig({
     ],
     options_ui: {
       open_in_tab: true,
+    },
+    // Toolbar button icon. `manifest.icons` (extensions page / store) is
+    // auto-discovered by WXT from public/icon/{16,32,48,128}.png; the action
+    // icon must be declared explicitly. Regenerate via `node scripts/gen-icons.mjs`.
+    action: {
+      default_icon: {
+        16: 'icon/16.png',
+        32: 'icon/32.png',
+        48: 'icon/48.png',
+      },
     },
   },
   // Push WXT's internal Vite dev server off port 3000 so it does not collide

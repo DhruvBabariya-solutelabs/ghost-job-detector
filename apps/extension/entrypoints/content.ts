@@ -143,6 +143,11 @@ export default defineContentScript({
     };
 
     const run = async (opts: { skipFastPath?: boolean } = {}): Promise<void> => {
+      // A content script outlives its extension when the extension is reloaded
+      // or auto-updated: the old script keeps running on the page but its
+      // chrome.runtime is dead, so any chrome.* call throws "Extension context
+      // invalidated". Bail before doing any work once the context is gone.
+      if (ctx.isInvalid) return;
       const adapter = pickAdapter(location.href);
       if (adapter === null) return; // URL outside our handled set — no overlay
       const posting = await extractWithRetry(adapter, document, {
@@ -157,7 +162,17 @@ export default defineContentScript({
       lastPosting = posting;
       // SW dispatch — ALL fetches go through background.ts (PITFALLS Cross-Origin Fetches)
       const request: RpcRequest = { type: 'ANALYZE', payload: posting };
-      const response = (await chrome.runtime.sendMessage(request)) as RpcResponse;
+      let response: RpcResponse;
+      try {
+        response = (await chrome.runtime.sendMessage(request)) as RpcResponse;
+      } catch {
+        // The context can invalidate between the guard above and this call
+        // (extension reload/update mid-flight), making sendMessage throw or
+        // reject with "Extension context invalidated". Nothing is actionable
+        // from a dead context — stop silently; the next page load injects a
+        // fresh script that re-runs the pipeline.
+        return;
+      }
       if (response.ok && 'data' in response) {
         renderOverlay(response.data);
       } else {
@@ -169,7 +184,7 @@ export default defineContentScript({
 
     await run();
 
-    startSoftNavWatcher({
+    const stopSoftNavWatcher = startSoftNavWatcher({
       onJobIdChange: () => {
         // D-47 — soft-nav unsticks the per-tab dismiss so the next job
         // re-mounts a fresh overlay. skipFastPath avoids reading the
@@ -180,5 +195,10 @@ export default defineContentScript({
       },
       debounceMs: SOFT_NAV_DEBOUNCE_MS,
     });
+
+    // Tear the watcher down when the extension context is invalidated (reload /
+    // update). Otherwise its MutationObserver + 200ms poll keep firing on a dead
+    // context and every onJobIdChange would hit the now-guarded run() forever.
+    ctx.onInvalidated(stopSoftNavWatcher);
   },
 });

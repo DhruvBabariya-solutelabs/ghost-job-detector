@@ -1,37 +1,32 @@
 /**
- * ReasonsList — "Why this score" section with up to 5 reason rows.
+ * ReasonsList — "Why this score" tiles (dark premium glass, 2026 refit).
  *
- * v3 redesign (post-feedback 2026-05-27 evening):
- *   - Directional triangle icon (▼ risk / ▲ good sign) replaces the plain
- *     bullet dot — direction is now encoded visually, not just numerically.
- *   - Chip text reduced to a single intensity word ("Strong" / "Notable" /
- *     "Mild"); the +/− glyph was redundant once the arrow shows direction.
- *   - Evidence quote moved from a heavy bordered pill to a 2px-left-border
- *     blockquote with a leading ❝ glyph — feels more like a citation, less
- *     like a UI chip.
- *   - Tighter vertical rhythm (gap-2.5 → gap-3) and consistent indent so
- *     reason text + quote line up visually.
+ * Each reason is a glass tile with:
+ *   - a leading direction chip (trend-up green for in-its-favour, trend-down
+ *     band-coloured for risk) that anchors the card with a soft accent glow,
+ *   - a gradient hairline border (accent → neutral) for a premium edge,
+ *   - the reason text + a dotted intensity pill (Strong / Notable / Mild),
+ *   - the signal name + a glowing gradient impact meter sized by |signed| vs the
+ *     strongest reason (staggered scaleX fill),
+ *   - an optional evidence citation (clamped to 2 lines).
+ * Status is conveyed by text AND colour (a11y), never colour alone. Rows
+ * hover-lift and stagger-reveal (55ms apart). All motion is transform/opacity
+ * and disabled under reduced-motion by overlay.css.
  *
- * Magnitude thresholds (matches the scoring engine's typical per-field range
- * after rounding in label.ts):
- *   |signed| ≥ 16  → Strong
- *   |signed| ≥ 8   → Notable
- *   otherwise      → Mild
+ * Magnitude thresholds (match label.ts rounding):
+ *   |signed| ≥ 16 → Strong · ≥ 8 → Notable · else → Mild
  *
- * Engine-misbehavior edge cases (UI-SPEC line 573-574):
- *   - reasons.length > 5 → render first 5 only.
- *   - reasons.length === 0 → inline "Couldn't summarize this posting" message;
- *     never silently render an empty section.
- *
- * Quote characters: U+201C / U+201D (typographic) — NOT ASCII " (U+0022).
+ * Edge cases (UI-SPEC 573-574): >5 reasons → first 5; 0 → inline note.
+ * Quote characters: U+201C / U+201D (typographic).
  */
 
 import type { Reason, RiskBand } from '@ghost/shared';
 import { RISK_COLORS } from '@ghost/shared';
+import { SIGNAL_LABELS } from './labels.js';
 
 export interface ReasonsListProps {
   reasons: Reason[];
-  /** Drives the negative-arrow tint so reasons stay keyed to the verdict. */
+  /** Drives the negative-direction tint so reasons stay keyed to the verdict. */
   band: RiskBand;
 }
 
@@ -41,127 +36,152 @@ function intensityLabel(absSigned: number): 'Mild' | 'Notable' | 'Strong' {
   return 'Mild';
 }
 
-/** Filled equilateral triangle pointing down — used for risk-leaning rows. */
-function DownTriangle({ className, color }: { className?: string; color: string }) {
+/** Trend arrow — up-right for a score-raising signal, down-right for risk. */
+function TrendArrow({ up, color }: { up: boolean; color: string }) {
   return (
     <svg
-      viewBox="0 0 16 16"
-      className={className}
+      viewBox="0 0 24 24"
+      className="w-4 h-4"
+      fill="none"
+      stroke={color}
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
       aria-hidden="true"
     >
-      <path d="M3 5 L13 5 L8 12 Z" fill={color} />
+      {up ? <path d="M6 18L18 6M9 6h9v9" /> : <path d="M6 6l12 12M9 18h9V9" />}
     </svg>
   );
 }
 
-/** Filled equilateral triangle pointing up — used for trust-leaning rows. */
-function UpTriangle({ className, color }: { className?: string; color: string }) {
-  return (
-    <svg
-      viewBox="0 0 16 16"
-      className={className}
-      aria-hidden="true"
-    >
-      <path d="M3 11 L13 11 L8 4 Z" fill={color} />
-    </svg>
-  );
-}
-
-// Hex constants for the good-sign arrow & chip — matches the green tint used
-// throughout the overlay (Phase 5 tokens). Negatives use the verdict's RISK_COLOR.
-const POSITIVE_ACCENT = '#16a34a';
-const POSITIVE_DEEP = '#15803d';
+const POSITIVE_ACCENT = '#34e89e';
 
 export function ReasonsList({ reasons, band }: ReasonsListProps) {
   const visibleReasons = reasons.slice(0, 5);
   const negativeAccent = RISK_COLORS[band];
+  const maxAbs = visibleReasons.reduce((m, r) => Math.max(m, Math.abs(r.signed)), 1);
 
   if (visibleReasons.length === 0) {
     return (
-      <div className="pt-3 border-t border-(--color-border)">
-        <h3 className="text-[10px] font-semibold uppercase tracking-[0.12em] text-(--color-ink-muted) pb-2">
+      <div className="pt-3 border-t border-(--ov-border)">
+        <h3 className="text-[10px] font-semibold uppercase tracking-[0.12em] text-(--ov-ink-muted) pb-2">
           Why this score
         </h3>
-        <p className="text-sm text-(--color-ink-muted)">
-          Couldn't summarize this posting
-        </p>
+        <p className="text-sm text-(--ov-ink-muted)">Couldn't summarize this posting</p>
       </div>
     );
   }
 
   return (
-    <div className="pt-3 border-t border-(--color-border)">
-      <h3 className="text-[10px] font-semibold uppercase tracking-[0.12em] text-(--color-ink-muted) pb-2.5">
+    <div className="pt-3 border-t border-(--ov-border)">
+      <h3 className="text-[10px] font-semibold uppercase tracking-[0.12em] text-(--ov-ink-muted) pb-2.5">
         Why this score
       </h3>
-      <ul className="space-y-3">
+      <ul className="space-y-2">
         {visibleReasons.map((reason, index) => {
           const positive = reason.signed >= 0;
           const intensity = intensityLabel(Math.abs(reason.signed));
           const accent = positive ? POSITIVE_ACCENT : negativeAccent;
-          const deep = positive ? POSITIVE_DEEP : undefined;
+          // Bright accent text reads on the dark glass.
+          const brightText = `color-mix(in oklch, ${accent} 74%, white)`;
+          const accentTop = `color-mix(in oklch, ${accent} 58%, white)`;
+          const pct = Math.max(6, Math.round((Math.abs(reason.signed) / maxAbs) * 100));
+          const key = `${reason.signalKey}-${index}`;
+          const quoted = reason.evidenceQuote ? `“${reason.evidenceQuote}”` : '';
 
-          // Chip styling — translucent tint + matching border + deep text.
+          // Gradient hairline border (accent → neutral) over the glass surface.
+          const cardBackground = `linear-gradient(var(--ov-surface), var(--ov-surface)) padding-box, linear-gradient(150deg, color-mix(in oklch, ${accent} 50%, transparent), var(--ov-border) 60%) border-box`;
+
           const chipStyle = {
-            backgroundColor: `color-mix(in oklch, ${accent} 12%, transparent)`,
-            borderColor: `color-mix(in oklch, ${accent} 28%, transparent)`,
-            color: deep ?? accent,
+            backgroundColor: `color-mix(in oklch, ${accent} 16%, transparent)`,
+            borderColor: `color-mix(in oklch, ${accent} 36%, transparent)`,
+            color: brightText,
           };
 
-          // Engine never emits duplicate reason rows; index is a safe key fallback.
-          const key = `${reason.signalKey}-${index}`;
-          // U+201C / U+201D — typographic curly quotes wrap the evidence text.
-          const quoted = reason.evidenceQuote
-            ? `“${reason.evidenceQuote}”`
-            : '';
-
           return (
-            <li key={key}>
-              <div className="flex items-start gap-2">
-                {positive ? (
-                  <UpTriangle
-                    className="w-3.5 h-3.5 mt-[3px] shrink-0"
-                    color={accent}
-                  />
-                ) : (
-                  <DownTriangle
-                    className="w-3.5 h-3.5 mt-[3px] shrink-0"
-                    color={accent}
-                  />
-                )}
-                <p className="text-[13px] leading-[1.45] flex-1 text-(--color-ink)">
-                  {reason.text}
-                </p>
+            <li
+              key={key}
+              className="gjd-ov-reason gjd-ov-rise relative overflow-hidden rounded-xl p-3"
+              style={{
+                border: '1px solid transparent',
+                background: cardBackground,
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)',
+                animationDelay: `${index * 55}ms`,
+              }}
+            >
+              <div className="flex items-start gap-2.5">
+                {/* Direction chip — visual anchor with soft accent glow. */}
                 <span
-                  className="inline-flex items-center px-2 py-[2px] text-[10px] font-semibold rounded-full border whitespace-nowrap uppercase tracking-wide"
-                  style={chipStyle}
-                  aria-label={`${intensity} ${positive ? 'positive' : 'negative'} signal`}
-                >
-                  {intensity}
-                </span>
-              </div>
-              {reason.evidenceQuote && (
-                <blockquote
-                  className="mt-1.5 ml-5 pl-2.5 py-0.5 text-[11px] italic text-(--color-ink-muted) leading-snug"
+                  aria-hidden="true"
+                  className="grid place-items-center w-8 h-8 shrink-0 rounded-[9px]"
                   style={{
-                    borderLeft: `2px solid color-mix(in oklch, ${accent} 50%, transparent)`,
-                    display: '-webkit-box',
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: 'vertical',
-                    overflow: 'hidden',
+                    color: accent,
+                    backgroundColor: `color-mix(in oklch, ${accent} 16%, transparent)`,
+                    border: `1px solid color-mix(in oklch, ${accent} 32%, transparent)`,
+                    boxShadow: `0 0 16px -6px ${accent}`,
                   }}
-                  title={quoted}
                 >
-                  {quoted}
-                </blockquote>
-              )}
+                  <TrendArrow up={positive} color={accent} />
+                </span>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-[13px] leading-[1.35] flex-1 text-(--ov-ink) font-medium">
+                      {reason.text}
+                    </p>
+                    <span
+                      className="inline-flex items-center gap-1.5 px-2 py-[3px] text-[10px] font-semibold rounded-full border whitespace-nowrap uppercase tracking-wide mt-[1px]"
+                      style={chipStyle}
+                      title={`${intensity} ${positive ? 'positive' : 'negative'} signal`}
+                    >
+                      <span className="w-[5px] h-[5px] rounded-full bg-current shrink-0" />
+                      {intensity}
+                    </span>
+                  </div>
+
+                  {/* Signal name + glowing impact meter */}
+                  <div className="mt-2.5 flex items-center gap-2">
+                    <span className="text-[10px] font-medium text-(--ov-ink-muted) whitespace-nowrap">
+                      {SIGNAL_LABELS[reason.signalKey]}
+                    </span>
+                    <span className="relative flex-1 h-1.5 rounded-full bg-(--ov-surface-2) overflow-hidden">
+                      <span
+                        className="absolute inset-y-0 left-0 rounded-full"
+                        style={{
+                          width: `${pct}%`,
+                          backgroundImage: `linear-gradient(90deg, ${accentTop}, ${accent})`,
+                          boxShadow: `0 0 10px -1px color-mix(in oklch, ${accent} 65%, transparent)`,
+                          transformOrigin: 'left',
+                          animation: `gjd-ov-bar 340ms cubic-bezier(0.16, 1, 0.3, 1) ${index * 55 + 120}ms both`,
+                        }}
+                      />
+                    </span>
+                  </div>
+
+                  {quoted && (
+                    <blockquote
+                      className="mt-2 pl-2.5 text-[11px] italic text-(--ov-ink-soft) leading-snug"
+                      style={{
+                        borderLeft: `2px solid color-mix(in oklch, ${accent} 55%, transparent)`,
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                      }}
+                      title={quoted}
+                    >
+                      {quoted}
+                    </blockquote>
+                  )}
+                </div>
+              </div>
             </li>
           );
         })}
       </ul>
-      <p className="mt-3.5 text-[10px] leading-[1.4] text-(--color-ink-muted)">
-        Score is the engine's weighted verdict across all signals — individual
-        flags don't add up to it directly.
+      <p className="mt-3 text-[10px] leading-[1.4] text-(--ov-ink-faint)">
+        The score is the engine's weighted verdict across every signal — individual flags don't add
+        up to it directly.
       </p>
     </div>
   );

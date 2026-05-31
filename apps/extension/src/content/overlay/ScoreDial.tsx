@@ -12,9 +12,9 @@
  *   - tabular-nums on counter prevents digit-width wobble
  */
 
-import { useEffect, useRef } from 'react';
-import type { RiskBand } from '@ghost/shared';
-import { RISK_COLORS, EASE_OUT_SOFT } from '@ghost/shared';
+import { useEffect, useId, useRef } from "react";
+import type { RiskBand } from "@ghost/shared";
+import { RISK_COLORS, EASE_OUT_SOFT } from "@ghost/shared";
 
 const SIZE = 128;
 const STROKE = 12;
@@ -38,6 +38,11 @@ export function ScoreDial({
 }: ScoreDialProps) {
   const indicatorRef = useRef<SVGCircleElement | null>(null);
   const counterRef = useRef<SVGTSpanElement | null>(null);
+  const uid = useId().replace(/:/g, "");
+  const accent = RISK_COLORS[risk];
+  // Gradient stops derived from the band accent — brightened top stop reads
+  // vividly on the dark glass.
+  const lightStop = `color-mix(in oklch, ${accent} 62%, white)`;
 
   useEffect(() => {
     const circle = indicatorRef.current;
@@ -47,7 +52,7 @@ export function ScoreDial({
     const finalOffset = CIRC * (1 - score / 100);
 
     // prefers-reduced-motion: snap to final state synchronously, no animation
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       circle.style.strokeDashoffset = String(finalOffset);
       counter.textContent = String(score);
       return;
@@ -55,7 +60,7 @@ export function ScoreDial({
 
     const anim = circle.animate(
       [{ strokeDashoffset: CIRC }, { strokeDashoffset: finalOffset }],
-      { duration: 700, easing: EASE_OUT_SOFT, fill: 'forwards' }
+      { duration: 700, easing: EASE_OUT_SOFT, fill: "forwards" },
     );
 
     const t0 = performance.now();
@@ -88,24 +93,36 @@ export function ScoreDial({
       onClick={onToggleDrawer}
       aria-expanded={drawerOpen}
       aria-controls={drawerId}
-      aria-label={drawerOpen ? 'Hide signal breakdown' : 'Show signal breakdown'}
-      className="block mx-auto rounded-full focus:outline-none focus-visible:ring-[3px] focus-visible:ring-[oklch(0.55_0.18_260/0.4)]"
+      aria-label={
+        drawerOpen ? "Hide signal breakdown" : "Show signal breakdown"
+      }
+      className="block mx-auto rounded-full focus:outline-none focus-visible:ring-[3px] focus-visible:ring-[#7c5cff66]"
     >
       <svg
         width={SIZE}
         height={SIZE}
         viewBox="0 0 128 128"
         aria-hidden="true"
-        style={{ fontVariantNumeric: 'tabular-nums' }}
+        style={{ fontVariantNumeric: "tabular-nums", overflow: "visible" }}
       >
+        <defs>
+          <linearGradient id={`gjd-dial-${uid}`} x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor={lightStop} />
+            <stop offset="100%" stopColor={accent} />
+          </linearGradient>
+        </defs>
+
+        {/* Track */}
         <circle
           cx={SIZE / 2}
           cy={SIZE / 2}
           r={RADIUS}
           fill="none"
-          stroke="var(--color-border)"
+          stroke="var(--ov-border-strong)"
           strokeWidth={STROKE}
         />
+
+        {/* Value arc — animated gradient stroke with a tight following glow. */}
         <circle
           ref={indicatorRef}
           data-indicator
@@ -113,24 +130,41 @@ export function ScoreDial({
           cy={SIZE / 2}
           r={RADIUS}
           fill="none"
-          stroke={RISK_COLORS[risk]}
+          stroke={`url(#gjd-dial-${uid})`}
           strokeWidth={STROKE}
           strokeLinecap="round"
           strokeDasharray={CIRC}
           strokeDashoffset={CIRC}
           transform={`rotate(-90 ${SIZE / 2} ${SIZE / 2})`}
-          style={{ willChange: 'transform' }}
+          style={{
+            willChange: "transform",
+            filter: `drop-shadow(0 0 3px color-mix(in oklch, ${accent} 45%, transparent))`,
+          }}
         />
+
+        {/* Numeral + /100 suffix */}
         <text
           x={SIZE / 2}
-          y={SIZE / 2}
+          y={60}
           textAnchor="middle"
           dominantBaseline="central"
-          fontSize={36}
-          fontWeight={600}
-          fill="currentColor"
+          fontSize={40}
+          fontWeight={700}
+          letterSpacing="-0.02em"
+          fill="var(--ov-ink)"
         >
           <tspan ref={counterRef}>0</tspan>
+        </text>
+        <text
+          x={SIZE / 2}
+          y={84}
+          textAnchor="middle"
+          fontSize={12}
+          fontWeight={600}
+          letterSpacing="0.04em"
+          fill="var(--ov-ink-muted)"
+        >
+          / 100
         </text>
       </svg>
     </button>

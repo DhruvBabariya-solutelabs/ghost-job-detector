@@ -1,16 +1,10 @@
 /**
- * EmptyState — the D-60 "couldn't read this posting" surface.
+ * EmptyState — the D-60 "couldn't read this posting" surface + the network-error
+ * variant. Dark premium glass, matching the result overlay.
  *
- * UI-SPEC §"Empty state" lines 384-394 + Copywriting Contract lines 167-168.
- *
- * Self-contained shell: renders its own overlay container + OverlayHeader so
+ * Self-contained shell: renders its own .gjd-ov-card container + OverlayHeader so
  * content.ts can render <EmptyState/> directly when the adapter returned null
- * after the 5-second MutationObserver retry. The Heuristics pill was removed
- * from the header (2026-05 UI iteration), so this comment's prop dance is
- * historical context only.
- *
- * Visual rule (UI-SPEC line 390): no illustration, single small open-book
- * SVG glyph at 24x24 muted-ink — "a sad-empty-folder icon screams template."
+ * after the 5-second MutationObserver retry.
  *
  * External link safety: target="_blank" rel="noopener" defeats reverse
  * tabnabbing (T-04-40 STRIDE mitigation).
@@ -22,7 +16,7 @@ interface IconProps {
   className?: string;
 }
 
-/** Open-book SVG glyph — 24x24 muted-ink, minimal line art. */
+/** Open-book SVG glyph — minimal line art. */
 function OpenBookIcon({ className }: IconProps) {
   return (
     <svg
@@ -35,17 +29,14 @@ function OpenBookIcon({ className }: IconProps) {
       strokeLinejoin="round"
       aria-hidden="true"
     >
-      {/* Spine */}
       <path d="M12 6 L12 19" />
-      {/* Left page */}
       <path d="M4 6 C 6.5 6, 9.5 6.5, 12 7.5 L 12 19 C 9.5 18, 6.5 17.5, 4 17.5 Z" />
-      {/* Right page */}
       <path d="M20 6 C 17.5 6, 14.5 6.5, 12 7.5 L 12 19 C 14.5 18, 17.5 17.5, 20 17.5 Z" />
     </svg>
   );
 }
 
-/** Right-chevron glyph for the CTA — 12x12 viewBox. */
+/** Right-chevron glyph for the CTA. */
 function ChevronRightIcon({ className }: IconProps) {
   return (
     <svg
@@ -72,25 +63,23 @@ export interface EmptyStateProps {
   onRetry?: () => void;
 }
 
+const SHELL =
+  'gjd-ov-card fixed top-4 right-4 w-80 overflow-hidden font-sans z-[2147483647]';
+const CTA =
+  'inline-flex items-center gap-1 mt-2 text-sm font-semibold text-(--ov-brand) hover:underline focus:outline-none focus-visible:ring-[3px] focus-visible:ring-[#7c5cff66] rounded-sm';
+
 export function EmptyState({ onDismiss, isNetworkError, onRetry }: EmptyStateProps) {
   if (isNetworkError) {
     return (
-      <div
-        className="fixed top-4 right-4 w-80 bg-(--color-surface) text-(--color-ink) border border-(--color-border) rounded-lg shadow-(--shadow-overlay) overflow-hidden font-sans z-[2147483647]"
-        style={{ backgroundColor: 'var(--color-surface, #fcfcfd)' }}
-      >
+      <div className={SHELL}>
         <OverlayHeader onDismiss={onDismiss} />
         <div className="p-8 flex flex-col items-center gap-3 text-center">
-          <OpenBookIcon className="w-6 h-6 text-(--color-ink-muted)" />
-          <h2 className="text-base font-semibold">Analysis failed</h2>
-          <p className="text-sm text-(--color-ink-muted) text-center max-w-[240px] mx-auto">
+          <OpenBookIcon className="w-6 h-6 text-(--ov-ink-muted)" />
+          <h2 className="text-base font-semibold text-(--ov-ink)">Analysis failed</h2>
+          <p className="text-sm text-(--ov-ink-muted) text-center max-w-[240px] mx-auto">
             Network error — check your connection and try again.
           </p>
-          <button
-            type="button"
-            onClick={() => onRetry?.()}
-            className="inline-flex items-center gap-1 mt-2 text-sm font-semibold text-(--color-brand) hover:underline focus:outline-none focus-visible:ring-[3px] focus-visible:ring-[oklch(0.55_0.18_260/0.4)] rounded-sm"
-          >
+          <button type="button" onClick={() => onRetry?.()} className={CTA}>
             Retry
             <ChevronRightIcon className="w-3 h-3" />
           </button>
@@ -100,24 +89,20 @@ export function EmptyState({ onDismiss, isNetworkError, onRetry }: EmptyStatePro
   }
 
   return (
-    <div
-      className="fixed top-4 right-4 w-80 bg-(--color-surface) text-(--color-ink) border border-(--color-border) rounded-lg shadow-(--shadow-overlay) overflow-hidden font-sans z-[2147483647]"
-      style={{ backgroundColor: 'var(--color-surface, #fcfcfd)' }}
-    >
+    <div className={SHELL}>
       <OverlayHeader onDismiss={onDismiss} />
       <div className="p-8 flex flex-col items-center gap-3 text-center">
-        <OpenBookIcon className="w-6 h-6 text-(--color-ink-muted)" />
-        <h2 className="text-base font-semibold">Couldn't read this posting</h2>
-        <p className="text-sm text-(--color-ink-muted) text-center max-w-[240px] mx-auto">
-          Ghost Job Detector didn't recognize this page layout. Try analyzing
-          it in the web app instead — paste the description and we'll score it
-          the same way.
+        <OpenBookIcon className="w-6 h-6 text-(--ov-ink-muted)" />
+        <h2 className="text-base font-semibold text-(--ov-ink)">Couldn't read this posting</h2>
+        <p className="text-sm text-(--ov-ink-muted) text-center max-w-[240px] mx-auto">
+          Ghost Job Detector didn't recognize this page layout. Try analyzing it in the web app
+          instead — paste the description and we'll score it the same way.
         </p>
         <a
           href="https://ghost-job-detector.vercel.app/analyze"
           target="_blank"
           rel="noopener"
-          className="inline-flex items-center gap-1 mt-2 text-sm font-semibold text-(--color-brand) hover:underline focus:outline-none focus-visible:ring-[3px] focus-visible:ring-[oklch(0.55_0.18_260/0.4)] rounded-sm"
+          className={CTA}
         >
           Open web analyzer
           <ChevronRightIcon className="w-3 h-3" />

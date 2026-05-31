@@ -25,3 +25,15 @@ export const BAND_DEEP_TEXT: Record<RiskBand, string> = {
   suspicious: '#c2410c',
   ghost: '#b91c1c',
 };
+
+/**
+ * One-line, plain-language verdict shown under the RiskLabel chip. Calm,
+ * confident, never alarmist (Copywriting Contract). Local to the overlay per
+ * the "duplicated v1" convention — the popup keeps its own copy in verdict.ts.
+ */
+export const VERDICT_LINES: Record<RiskBand, string> = {
+  legitimate: 'Likely a real, active role — apply with confidence.',
+  caution: 'Probably real, but some details are vague — read closely.',
+  suspicious: 'Several red flags here — verify the company before applying.',
+  ghost: 'Strong signs of a ghost or scam listing — be careful.',
+};

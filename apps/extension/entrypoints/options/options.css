@@ -1,0 +1,60 @@
+/**
+ * Options page stylesheet.
+ *
+ * The options page is a full chrome-extension:// page (no host CSS to collide
+ * with) and now shares the *premium dark-glass* design system used by the popup
+ * and side panel — `src/ui/theme.css` (Inter, violet brand, glass cards, motion
+ * keyframes, theme-aware scrollbars). It is authored with inline styles + the
+ * `gjd-*` utility classes exactly like those surfaces, so it does NOT pull in
+ * the Tailwind build (`@ghost/shared/theme.css`) any more.
+ *
+ * Pseudo-class styling (input focus glow, placeholder colour, link hover) lives
+ * here rather than in JS — inline styles can't express `:focus` / `::placeholder`.
+ */
+
+@import "../../src/ui/theme.css";
+
+html,
+body {
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+/* BYOK key field — quiet by default, violet glow on focus. */
+.gjd-input {
+  transition:
+    border-color var(--dur-micro) var(--ease-quart),
+    box-shadow var(--dur-micro) var(--ease-quart),
+    background var(--dur-micro) var(--ease-quart);
+}
+.gjd-input::placeholder {
+  color: var(--ink-faint);
+}
+.gjd-input:focus {
+  border-color: color-mix(in oklab, var(--brand) 65%, var(--border));
+  box-shadow: 0 0 0 4px var(--brand-glow);
+  background: var(--surface-2);
+}
+
+/* Inline text link — violet, underline grows in on hover. */
+.gjd-link {
+  color: var(--brand);
+  text-decoration: none;
+  border-bottom: 1px solid color-mix(in oklab, var(--brand) 40%, transparent);
+  transition: border-color var(--dur-micro) var(--ease-quart);
+}
+.gjd-link:hover {
+  border-bottom-color: var(--brand);
+}
+
+/* Inline <code> in the privacy disclosure. */
+.gjd-code {
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, monospace;
+  font-size: 0.85em;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--ink-soft);
+  word-break: break-all;
+}

@@ -45,13 +45,13 @@ function GhostIcon({ className }: IconProps) {
     >
       <path
         d="M3 14.5V8a6 6 0 0 1 12 0v6.5c0 .35-.4.55-.7.3l-1.55-1.25-1.6 1.3c-.22.18-.55.18-.77 0L9 13.55l-1.38 1.3c-.22.18-.55.18-.77 0L5.25 13.55 3.7 14.8c-.3.25-.7.05-.7-.3z"
-        fill="color-mix(in oklch, var(--color-brand) 14%, transparent)"
-        stroke="var(--color-brand)"
+        fill="color-mix(in oklch, var(--ov-brand) 22%, transparent)"
+        stroke="var(--ov-brand)"
         strokeWidth={1.4}
         strokeLinejoin="round"
       />
-      <circle cx={7} cy={8} r={0.85} fill="var(--color-brand)" />
-      <circle cx={11} cy={8} r={0.85} fill="var(--color-brand)" />
+      <circle cx={7} cy={8} r={0.85} fill="var(--ov-brand)" />
+      <circle cx={11} cy={8} r={0.85} fill="var(--ov-brand)" />
     </svg>
   );
 }
@@ -62,13 +62,10 @@ export interface OverlayHeaderProps {
 
 export function OverlayHeader({ onDismiss }: OverlayHeaderProps) {
   return (
-    <header
-      className="h-11 pl-3 pr-2 flex items-center justify-between border-b border-(--color-border) bg-(--color-surface)"
-      style={{ backgroundColor: 'var(--color-surface, #fcfcfd)' }}
-    >
+    <header className="h-11 shrink-0 pl-3 pr-2 flex items-center justify-between border-b border-(--ov-border)">
       <div className="flex items-center gap-2 min-w-0">
         <GhostIcon className="w-[18px] h-[18px] shrink-0" />
-        <span className="text-[13px] font-semibold tracking-tight text-(--color-ink) truncate">
+        <span className="text-[13px] font-semibold tracking-tight text-(--ov-ink) truncate">
           Ghost Job Detector
         </span>
       </div>
@@ -76,7 +73,7 @@ export function OverlayHeader({ onDismiss }: OverlayHeaderProps) {
         type="button"
         onClick={onDismiss}
         aria-label="Dismiss Ghost Job Detector overlay"
-        className="w-8 h-8 grid place-items-center rounded-md text-(--color-ink-muted) hover:bg-(--color-surface-subtle) hover:text-(--color-ink) transition-colors focus:outline-none focus-visible:ring-[3px] focus-visible:ring-[oklch(0.55_0.18_260/0.4)]"
+        className="w-8 h-8 grid place-items-center rounded-md text-(--ov-ink-muted) hover:bg-(--ov-surface) hover:text-(--ov-ink) transition-colors focus:outline-none focus-visible:ring-[3px] focus-visible:ring-[#7c5cff66]"
       >
         <XIcon className="w-4 h-4" />
       </button>

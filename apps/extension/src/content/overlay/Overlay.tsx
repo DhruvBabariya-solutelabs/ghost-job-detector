@@ -30,6 +30,7 @@ import { ScoreDial } from './ScoreDial.js';
 import { RiskLabel } from './RiskLabel.js';
 import { ReasonsList } from './ReasonsList.js';
 import { SignalBreakdownDrawer } from './SignalBreakdownDrawer.js';
+import { VERDICT_LINES } from './labels.js';
 
 export interface OverlayProps {
   response: AnalyzeResponse;
@@ -41,23 +42,20 @@ export function Overlay({ response, onDismiss }: OverlayProps) {
   const drawerId = useId();
 
   const accent = RISK_COLORS[response.risk];
-  // Soft band-tinted radial behind the score block — fades from 7% alpha at
-  // the dial center to fully transparent at ~70% radius. Hero Score motif.
-  const scoreBackdrop = {
-    backgroundImage: `radial-gradient(circle at 50% 38%, color-mix(in oklch, ${accent} 7%, transparent), transparent 70%)`,
-  };
+  const lightAccent = `color-mix(in oklch, ${accent} 55%, white)`;
 
   return (
     <div
-      className="fixed top-4 right-4 w-80 bg-(--color-surface) text-(--color-ink) border border-(--color-border) rounded-lg shadow-(--shadow-overlay) overflow-hidden font-sans z-[2147483647]"
-      style={{
-        fontVariantNumeric: 'tabular-nums',
-        // Explicit opaque fallback — defense in depth in case the CSS var fails
-        // to resolve inside the shadow root (e.g. Tailwind regression). Host
-        // page text must never bleed through the overlay.
-        backgroundColor: 'var(--color-surface, #fcfcfd)',
-      }}
+      className="gjd-ov-card fixed top-4 right-4 w-[400px] flex flex-col max-h-[calc(100vh-2rem)] overflow-hidden font-sans z-[2147483647]"
+      style={{ fontVariantNumeric: 'tabular-nums' }}
     >
+      {/* Verdict accent strip — a thin gradient bar keys the card to the band. */}
+      <div
+        aria-hidden="true"
+        className="shrink-0"
+        style={{ height: 3, backgroundImage: `linear-gradient(90deg, ${lightAccent}, ${accent})` }}
+      />
+
       <OverlayHeader onDismiss={onDismiss} />
 
       {/* Aria-live announcement for screen readers (UI-SPEC §Accessibility line 610). */}
@@ -66,12 +64,12 @@ export function Overlay({ response, onDismiss }: OverlayProps) {
         {bandLabelFor(response.risk)}.
       </span>
 
-      {/* Score block — eyebrow + dial + verdict, unified by radial backdrop. */}
-      <div
-        className="px-4 pt-4 pb-3 flex flex-col items-center"
-        style={scoreBackdrop}
-      >
-        <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-(--color-ink-muted) mb-1">
+      {/* Score block — eyebrow + dial + verdict. Pinned (shrink-0) so the hero
+          stays visible while reasons scroll. No background tint: the gauge arc
+          + its own glow carry the verdict colour (avoids a muddy reflection on
+          the dark glass). */}
+      <div className="px-5 pt-5 pb-4 flex flex-col items-center shrink-0">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-(--ov-ink-muted) mb-1">
           Trust Score
         </span>
         <ScoreDial
@@ -82,10 +80,14 @@ export function Overlay({ response, onDismiss }: OverlayProps) {
           drawerId={drawerId}
         />
         <RiskLabel band={response.risk} />
+        <p className="mt-2 text-[12px] leading-snug text-(--ov-ink-soft) text-center max-w-[232px]">
+          {VERDICT_LINES[response.risk]}
+        </p>
       </div>
 
-      {/* Reasons block */}
-      <div className="px-4 pb-4">
+      {/* Reasons block — the only scroll region (min-h-0 lets it shrink inside
+          the capped flex column; gjd-ov-scroll themes the scrollbar). */}
+      <div className="gjd-ov-scroll px-5 pb-5 grow min-h-0 overflow-y-auto">
         <ReasonsList reasons={response.reasons} band={response.risk} />
       </div>
 

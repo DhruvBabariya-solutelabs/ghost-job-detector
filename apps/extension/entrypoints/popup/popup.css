@@ -1,21 +1,19 @@
 /**
- * Popup stylesheet — Foundation phase.
+ * Popup stylesheet — premium redesign.
  *
- * Imports @ghost/shared/theme.css so Tailwind v4 utilities derived from the
- * shared @theme block (e.g. `text-risk-legitimate`, `bg-risk-ghost`) become
- * available inside the extension popup.
- *
- * The popup is a fully-rendered HTML page in chrome-extension:// origin —
- * no Shadow DOM isolation needed here. That's the content-script overlay's
- * problem (Phase 4).
+ * The popup is a full chrome-extension:// page with no host CSS to collide
+ * with, so it gets the dedicated UI design system (Inter, violet brand, dark
+ * canvas, glassmorphism, motion) rather than the shared overlay tokens. The
+ * in-page Shadow-DOM overlay deliberately keeps the system-font shared theme.
  */
 
-@import "@ghost/shared/theme.css";
+@import "../../src/ui/theme.css";
 
+/* Fixed popup width is owned by <main> (380px). The body just supplies the
+   canvas background so there's no flash before React mounts. */
+html,
 body {
-  margin: 0;
-  padding: 0.75rem;
-  min-width: 280px;
-  font-family: var(--font-sans);
-  font-size: var(--text-sm);
+  width: 380px;
+  background: var(--bg);
+  overflow-x: hidden;
 }
