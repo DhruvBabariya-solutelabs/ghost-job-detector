@@ -1,168 +1,339 @@
-# Ghost Job Detector
+<div align="center">
 
-AI-powered Chrome extension + Next.js web app that scores LinkedIn and Indeed job postings **0–100** for legitimacy — directly on the page, in under three seconds. Bring your own OpenRouter key. No accounts. No tracking. No database.
+# 👻 Ghost Job Detector
+
+### Know if a job is real **before** you waste an hour applying.
+
+A Chrome extension that scores every LinkedIn & Indeed posting **0–100 for legitimacy** — right on the page, in under three seconds. AI-powered. Bring-your-own-key. Zero tracking.
+
+<br/>
+
+[![Manifest V3](https://img.shields.io/badge/Chrome-Manifest%20V3-4285F4?logo=googlechrome&logoColor=white)](https://developer.chrome.com/docs/extensions/mv3/intro/)
+[![Built with WXT](https://img.shields.io/badge/built%20with-WXT%200.20-67D55E)](https://wxt.dev/)
+[![React 19](https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white)](https://react.dev/)
+[![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Tailwind v4](https://img.shields.io/badge/Tailwind-v4-38BDF8?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![BYOK · OpenRouter](https://img.shields.io/badge/AI-BYOK%20·%20OpenRouter-8B5CF6)](https://openrouter.ai/keys)
+[![Privacy: no tracking](https://img.shields.io/badge/privacy-no%20accounts%20·%20no%20tracking-22C55E)]()
+
+[**What it does**](#-the-three-second-moment) ·
+[**Live demo**](#-live-demo) ·
+[**Features**](#-features) ·
+[**How scoring works**](#-how-the-score-works) ·
+[**Install**](#-install-the-extension) ·
+[**Privacy**](#-privacy--byok) ·
+[**Architecture**](#-under-the-hood)
+
+</div>
+
+<!--
+  📸 DEMO ASSET: drop a screen recording of the overlay appearing on a real
+  LinkedIn job at docs/demo.gif and uncomment the block below for max impact.
+
+  <div align="center"><img src="docs/demo.gif" alt="Ghost Job Detector overlay scoring a LinkedIn posting" width="720"/></div>
+-->
 
 ---
 
-## What it does
+## 🎯 The three-second moment
 
-Ghost Job Detector reads the job posting visible in your browser, sends it to a scoring engine that combines **regex heuristics** with **LLM analysis** (via OpenRouter), and surfaces a trust score with a color-coded verdict and 3–5 plain-English reasons — rendered in an isolated overlay on top of the posting.
+"Ghost jobs" are everywhere — postings left open with no intent to hire, AI-generated filler, recruiter word-salad, and outright scams. Job seekers burn hours tailoring applications to listings that were never real.
 
-**Four risk bands:**
+**Ghost Job Detector kills that guesswork.** Open any LinkedIn or Indeed job and an isolated overlay slides in with a verdict you can trust at a glance:
 
-| Band | Score | Meaning |
-|------|-------|---------|
-| 🟢 **Legitimate** | 80–100 | Specific, well-formed, human-written posting |
-| 🟡 **Caution** | 50–79 | Some weak signals; read carefully |
-| 🟠 **Suspicious** | 20–49 | Multiple red flags |
-| 🔴 **Likely Ghost Job** | 0–19 | Strong scam / ghost / AI-spam signals |
+```
+        ╭──────────────────────────────╮
+        │            ┌────────┐         │   🟢  Legitimate        80–100
+        │            │   87   │  🟢     │   🟡  Caution           50–79
+        │            └────────┘         │   🟠  Suspicious        20–49
+        │         Looks legitimate      │   🔴  Likely ghost job   0–19
+        │                               │
+        │  ✓ Concrete salary & stack    │
+        │  ✓ Named team and manager     │
+        │  ⚠ Mild buzzword density      │
+        ╰──────────────────────────────╯
+```
 
-The engine blends several **regex signals** (buzzword density, specificity, scam patterns, recruiter "lift-quote" phrasing) with **LLM-backed signals** (AI-generated-text detection and an LLM legitimacy evaluation). It runs on a uniform `SignalResult` shape and a weight-renormalizing aggregator — when no API key is supplied, the LLM signals drop out and weights renormalize across the remaining heuristics. There is no separate "heuristics-only" code path.
+A **0–100 trust score**, a **color-coded risk band**, and **3–5 plain-English reasons** — without leaving the page, without copy-pasting, without an account.
 
-> **BYOK & privacy:** You supply your own [OpenRouter](https://openrouter.ai/keys) key. The server reads it from the `x-openrouter-key` request header only — never from the body, query string, or an env var, and it is **never stored or logged**.
+> [!NOTE]
+> The extension reads only the posting **you are already looking at**. It never scrapes behind login walls and never fetches job sites in the background.
+
+<div align="right"><a href="#-ghost-job-detector">↑ back to top</a></div>
 
 ---
 
-## Prerequisites
+## 🎥 Live demo
 
-- **Node.js 22 LTS** (`.nvmrc` is present — run `nvm use`)
-- **npm 10+**
-- A **Chromium-based browser** (Chrome, Edge, Brave, …)
-- An **OpenRouter API key** — free to create at [openrouter.ai/keys](https://openrouter.ai/keys) (format: `sk-or-v1-…`). Default model: `openai/gpt-4o-mini`.
+Watch Ghost Job Detector score a real LinkedIn posting in seconds:
+
+<div align="center">
+
+[![Watch the live demo on YouTube](https://img.shields.io/badge/▶%20Watch%20the%20live%20demo-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://youtu.be/mq91K4oiq1c)
+
+**▶ [https://youtu.be/mq91K4oiq1c](https://youtu.be/mq91K4oiq1c)**
+
+</div>
+
+<div align="right"><a href="#-ghost-job-detector">↑ back to top</a></div>
 
 ---
 
-## Quick start (development)
+## ✨ Features
+
+### On the job page
+
+|     | Feature                                                                                                                         |
+| --- | ------------------------------------------------------------------------------------------------------------------------------- |
+| 🛡️  | **Auto-activating overlay** on `linkedin.com/jobs/*` and `indeed.com/*` job-detail pages — no clicks required.                  |
+| 🎬  | **Animated trust dial** that counts up to the score with a color-coded band the instant analysis returns.                       |
+| 🧾  | **Signed reasons** — green flags _and_ red flags in one ranked list, each in plain English.                                     |
+| 🔍  | **Signal breakdown drawer** revealing exactly which signals moved the score and by how much.                                    |
+| 🔄  | **Soft-nav aware** — click between listings in LinkedIn's SPA and the overlay re-scores the new job automatically.              |
+| 🧱  | **Closed Shadow DOM + `adoptedStyleSheets`** so the overlay's styles can never clash with — or be clobbered by — the host page. |
+| 🫥  | **Honest empty state** — if a posting can't be read, you get a "couldn't read this posting" message, never a misleading zero.   |
+
+### Popup & side panel
+
+|     | Feature                                                                                              |
+| --- | ---------------------------------------------------------------------------------------------------- |
+| 👋  | **First-run onboarding** that walks new users through the verdict in seconds.                        |
+| 🧪  | **Live sample postings** — one per risk band — so you can see the product work with zero setup.      |
+| 📜  | **Scan history** persisted locally (last 50 scans), re-openable any time.                            |
+| 👻  | **"Ghosts dodged" counter** — a running tally of suspicious/ghost listings you've been warned about. |
+| 📤  | **Share-verdict card** to screenshot and send a result to a friend.                                  |
+| 🪟  | **Expand to side panel** for a roomy, two-pane view alongside your browsing.                         |
+| 🌗  | **Dark / light theme toggle** with a polished, motion-aware UI (respects `prefers-reduced-motion`).  |
+| 📡  | **Offline-aware** — a clear banner instead of a cryptic failure when the network drops.              |
+
+### Settings (Options page)
+
+|     | Feature                                                                                                                        |
+| --- | ------------------------------------------------------------------------------------------------------------------------------ |
+| 🔑  | **Bring-your-own OpenRouter key** with live `sk-or-v1-…` format validation and show/hide.                                      |
+| ✅  | **"Test key"** button verifies your key against OpenRouter in one call and reports success / invalid / rate-limited / offline. |
+| 🟢  | **Connection status pill** showing whether a key is saved (and its last 4 chars).                                              |
+| 🗑️  | **One-tap key removal** with a confirm step — wipes it from the device instantly.                                              |
+| 📖  | **Plain-language privacy disclosure** — what's sent, where the key lives, and what the extension will never do.                |
+
+<div align="right"><a href="#-ghost-job-detector">↑ back to top</a></div>
+
+---
+
+## 🧠 How the score works
+
+Every posting first passes a **triage gate** (`isLikelyJobPosting`). If it isn't actually a job posting, the engine returns a neutral "can't tell" instead of inventing a score.
+
+Real postings are then run through **five independent signals**. Each returns the same uniform `{ ghostiness, confidence, evidence }` shape, and a **weight-renormalizing aggregator** blends them — it never branches on which signal produced the number.
+
+| Signal                     | Weight | What it catches                                         | Powered by |
+| -------------------------- | :----: | ------------------------------------------------------- | :--------: |
+| 🤖 **AI-generated text**   |  30%   | Postings that read like an LLM wrote them               |    LLM     |
+| 🎯 **Specificity**         |  25%   | Missing salary, stack, seniority, team, benefits        |   Regex    |
+| 🗣️ **Buzzword density**    |  20%   | "Rockstar / ninja / wear many hats / fast-paced"        |   Regex    |
+| 🚩 **Scam patterns**       |  15%   | Urgency, off-platform contact, unrealistic comp         |   Regex    |
+| ⚖️ **LLM legitimacy eval** |  10%   | A structured authenticity judgment of the whole posting |    LLM     |
+
+```
+final score = 100 − Σ ( signal.ghostiness × normalized_weight )
+```
+
+**Smart fallbacks baked in:**
+
+- 🔌 **No API key? Still works.** The two LLM signals drop out and the remaining weights **renormalize across the heuristics** — there is no separate "heuristics-only" code path to drift out of sync.
+- 🎚️ **Fewer false alarms.** A posting that's highly _specific_ but a little buzzwordy gets its buzzword weight halved — concrete detail outranks vibes.
+
+### Risk bands
+
+| Band                    | Score  | Meaning                               |
+| ----------------------- | :----: | ------------------------------------- |
+| 🟢 **Legitimate**       | 80–100 | Specific, well-formed, human-written  |
+| 🟡 **Caution**          | 50–79  | Some weak signals — read carefully    |
+| 🟠 **Suspicious**       | 20–49  | Multiple red flags                    |
+| 🔴 **Likely Ghost Job** |  0–19  | Strong scam / ghost / AI-spam signals |
+
+<div align="right"><a href="#-ghost-job-detector">↑ back to top</a></div>
+
+---
+
+## 🔒 Privacy & BYOK
+
+Privacy isn't a footnote here — it's the architecture.
+
+- **Bring your own key.** You supply a free [OpenRouter](https://openrouter.ai/keys) key (default model `openai/gpt-4o-mini`). It's stored only in `chrome.storage.local` on your device.
+- **The key is never logged or stored server-side.** It travels only in the `x-openrouter-key` request header — never the body, query string, or an env var. There is intentionally no server-side key fallback.
+- **Minimal data leaves your browser.** Only the **title, company, location, and description** of the posting are analyzed — **never the page URL**, never your identity.
+- **No accounts. No tracking. No analytics. No database. No cross-device sync.** Uninstall the extension and your key and history are gone with it.
+
+<div align="right"><a href="#-ghost-job-detector">↑ back to top</a></div>
+
+---
+
+## 🚀 Install the extension
+
+> The extension is distributed as an **unpacked (sideloaded)** build — load it in under a minute.
+
+### Prerequisites
+
+- **Node.js 22 LTS** and **npm 10+**
+- A **Chromium browser** (Chrome, Edge, Brave, Arc, …)
+- A free **OpenRouter API key** — [openrouter.ai/keys](https://openrouter.ai/keys) (format `sk-or-v1-…`)
+
+### 1 · Build it
 
 ```bash
 git clone https://github.com/DhruvBabariya-solutelabs/ghost-job-detector.git
 cd ghost-job-detector
-nvm use            # selects Node 22 from .nvmrc
-npm install        # installs all workspaces
-npm run dev        # Next.js web app on :3000 + WXT extension dev build (HMR)
-```
-
-`npm run dev` runs both workspaces via Turborepo:
-
-- **Web app** → http://localhost:3000
-- **Extension** → WXT writes a live-reloading dev build to `apps/extension/.output/chrome-mv3/`
-
-Load that `chrome-mv3/` folder as an unpacked extension (see [Installing the extension](#installing-the-extension-sideload)).
-
----
-
-## Installing the extension (sideload)
-
-**1. Build the extension**
-
-```bash
+npm install
 npm run build --workspace=apps/extension
-# Output → apps/extension/.output/chrome-mv3/
+# → output: apps/extension/.output/chrome-mv3/
 ```
 
-(During development you can skip this and use the `npm run dev` output instead.)
+### 2 · Load it into Chrome
 
-**2. Open the extensions page and enable Developer mode**
+1. Open `chrome://extensions`
+2. Toggle **Developer mode** (top-right)
+3. Click **Load unpacked** → select `apps/extension/.output/chrome-mv3/`
+4. Click the puzzle-piece icon and **pin** Ghost Job Detector 📌
 
-Paste `chrome://extensions` into your address bar, then toggle **Developer mode** (top-right).
+> [!TIP]
+> Already had a job tab open? After pinning, do a **hard reload** of your LinkedIn job-detail page (`Ctrl`/`Cmd` + `Shift` + `R`) so the content script injects and the score overlay pops up.
 
-**3. Load unpacked**
+### 3 · Add your key
 
-Click **Load unpacked** and select the `apps/extension/.output/chrome-mv3/` folder.
+1. Click the extension → ⚙️ **Settings & API key**
+2. Paste your `sk-or-v1-…` key → **Save key**
+3. (Optional) **Test key** to confirm it works against OpenRouter
 
-**4. Pin it**
+### 4 · Use it
 
-Click the puzzle-piece icon in the toolbar and pin **Ghost Job Detector**.
+Open any **LinkedIn** (`linkedin.com/jobs/*`) or **Indeed** job posting — the overlay appears and scores it automatically. Click between listings and it re-scores each one.
 
----
+> [!TIP]
+> The two AI signals need your key, but the extension still scores postings with its regex heuristics alone if you skip it — just less precisely.
 
-## Adding your OpenRouter key
-
-The extension needs your key to run the LLM signals (heuristic-only scoring works without it, but is less accurate).
-
-1. Click the puzzle-piece icon → **Ghost Job Detector** → **Open Options**.
-2. Paste your OpenRouter key (`sk-or-v1-…`) and click **Save**.
-3. Optionally click **Test key** — it makes one direct call to `openrouter.ai/api/v1/auth/key` to confirm the key works.
-
-Your key is stored only in `chrome.storage.local` on your device. Get a key at [openrouter.ai/keys](https://openrouter.ai/keys).
-
-**Web app:** the `/analyze` page uses the same BYOK model. Open the **gear icon** (Settings) in the top bar, paste your key, and Save — it's stored in `localStorage` in that browser.
+<div align="right"><a href="#-ghost-job-detector">↑ back to top</a></div>
 
 ---
 
-## Using it
+## 🏗️ Under the hood
 
-- **Extension:** navigate to any LinkedIn job (`linkedin.com/jobs/*`) or Indeed posting (`indeed.com/*`). The overlay appears automatically and re-scores as you navigate between listings. If a posting can't be read, you'll see a "couldn't read this posting" empty state rather than a misleading zero score.
-- **Web app:** open http://localhost:3000/analyze, paste a posting's text, and analyze it manually — no extension required.
+The extension never calls the AI provider directly. The **service worker** owns all network I/O (content scripts are bound by the host page's CORS policy), and a small serverless route runs the scoring engine so your key is the only secret on the wire.
 
----
-
-## Running the full stack locally
-
-```bash
-npm run dev          # Next.js (:3000) + WXT extension dev build, both with HMR
-npm run build        # Production build of every workspace
-npm run typecheck    # tsc --noEmit across all workspaces (the primary safety net)
-npm run lint         # Biome lint
-npm run format       # Biome format --write
+```mermaid
+flowchart LR
+    A["Content script<br/>(LinkedIn / Indeed)"] -->|extract title, company,<br/>location, description| B["Service worker<br/>(fetch bridge)"]
+    B -->|POST + x-openrouter-key header| C["/api/analyze-job<br/>(scoring engine)"]
+    C -->|regex + LLM signals| D["analyzeJob()<br/>weighted aggregator"]
+    D -->|score · risk · reasons| C
+    C -->|JSON| B
+    B -->|relay| A
+    A -->|render| E["Closed Shadow-DOM overlay<br/>score dial · reasons · drawer"]
 ```
 
-> There is **no automated test suite** for v1 — `npm run typecheck` is the primary correctness gate (TypeScript strict mode + `noUncheckedIndexedAccess`).
+**Extraction strategy:** JSON-LD (`<script type='application/ld+json'>`) is tried first, with comma-separated CSS-selector fallbacks per board — isolated behind a `JobBoardAdapter` interface (`Document → JobPosting | null`) so adding a new job board is a single new adapter.
 
-### Optional: scoring-engine calibration
+### Tech stack
 
-The scoring package ships a calibration harness. It is the **only** place an env var is used, and it never ships to production:
+| Layer               | Choice                                                                                               |
+| ------------------- | ---------------------------------------------------------------------------------------------------- |
+| Extension framework | **WXT 0.20** + `@wxt-dev/module-react` (auto-generates the MV3 manifest, HMR for content/SW/options) |
+| UI                  | **React 19** + **TypeScript 5.7** (strict, `noUncheckedIndexedAccess`)                               |
+| Styling             | **Tailwind v4** (CSS-first `@theme`), injected via `adoptedStyleSheets`                              |
+| AI                  | **OpenAI SDK** pointed at **OpenRouter** — Chat Completions + Structured Outputs (`strict: true`)    |
+| Contracts           | **Zod** — one schema validates the wire payload _and_ types the engine + UI                          |
+| Persistence         | `chrome.storage.local` (key, history, theme, onboarding, ghosts-dodged)                              |
+| Monorepo            | npm workspaces + **Turborepo** · lint/format by **Biome 2**                                          |
 
-```bash
-# Requires an OpenRouter key in OPENROUTER_API_KEY_EVAL (local only — never deploy this)
-OPENROUTER_API_KEY_EVAL=sk-or-v1-... npm run calibrate --workspace=@ghost/scoring
-```
-
----
-
-## Vercel deployment
-
-The web app — including the single `/api/analyze-job` route — deploys as one Vercel project.
-
-1. Import the repo at [vercel.com/new](https://vercel.com/new) and set the project **root directory** to `apps/web`.
-2. **No environment variables are required.** There is intentionally no `OPENROUTER_API_KEY` server-side fallback — BYOK by design (see `.env.example`).
-3. Deploy. The API route runs on the **Node.js runtime** with `maxDuration = 30`. CORS is wildcard (`*`) so the sideloaded extension can call it.
-
-> The web `prebuild` step runs `scripts/prepare-extension.mjs`, which bundles the extension `.zip` served by the `/install` page.
-
----
-
-## Project structure
+### Repository layout
 
 ```
 ghost-job-detector/
 ├─ apps/
-│  ├─ web/          # Next.js 15 App Router — landing + /analyze + /dashboard + /install + /api
-│  │  └─ src/app/api/analyze-job/route.ts   ← THE ONLY API ROUTE
-│  └─ extension/    # WXT MV3 — content script + service worker + popup + options
-│     └─ src/content/adapters/              ← linkedin.ts, indeed.ts (the extraction seam)
+│  └─ extension/                     # 👈 the product
+│     ├─ entrypoints/
+│     │  ├─ background.ts            # service worker — the only place fetch() runs
+│     │  ├─ content.ts               # injects the overlay, watches for soft-nav
+│     │  ├─ popup/                   # toolbar popup (gauge, reasons, history, share)
+│     │  ├─ sidepanel/               # expanded two-pane view
+│     │  └─ options/                 # BYOK key entry + privacy disclosure
+│     └─ src/
+│        ├─ content/adapters/        # linkedin.ts, indeed.ts  ← the extraction seam
+│        ├─ content/overlay/         # ScoreDial, ReasonsList, SignalBreakdownDrawer…
+│        └─ lib/                     # messages (typed RPC) + storage
 └─ packages/
-   ├─ shared/       # Framework-free zod contracts + risk bands + design tokens + fixtures
-   │  └─ src/contracts.ts                   ← wire schema, single source of truth
-   └─ scoring/      # Pure-TS engine — extractors + weight-renormalizing aggregator + labeler
-      └─ src/index.ts: analyzeJob(posting, { ai })
+   ├─ shared/    # framework-free Zod contracts, risk bands, design tokens, fixtures
+   └─ scoring/   # pure-TS engine: extractors + weight-renormalizing aggregator + labeler
 ```
 
-**Data flow:** content script extracts the posting (JSON-LD first, CSS-selector fallback) → message-passes to the service worker → SW `fetch`es `/api/analyze-job` with the `x-openrouter-key` header → the route validates the body with zod, builds an OpenAI-SDK client pointed at OpenRouter, and calls `analyzeJob()` → returns JSON → SW relays it back → content script renders the Shadow-DOM overlay.
+### Development
 
-### Tech stack
+```bash
+npm run dev                          # WXT dev build with HMR + local scoring API
+npm run typecheck                    # tsc --noEmit everywhere — the primary safety net
+npm run lint                         # Biome lint
+npm run format                       # Biome format --write
+```
 
-- **Monorepo:** npm workspaces + Turborepo 2.9
-- **Web:** Next.js 15 (App Router) + React 19 + TypeScript 5.7 strict
-- **Extension:** WXT 0.20 + `@wxt-dev/module-react` (auto-generates the MV3 manifest)
-- **Styling:** Tailwind v4 (CSS-first `@theme`), shared via `packages/shared`
-- **AI:** OpenAI SDK pointed at OpenRouter (`baseURL: https://openrouter.ai/api/v1`), Chat Completions + Structured Outputs
-- **Validation:** Zod (one schema validates the wire input and types the engine + UI)
-- **Tooling:** Biome 2 (lint + format)
-- **Persistence:** `chrome.storage.local` (extension) + `localStorage` (web). No database, no auth.
+> [!IMPORTANT]
+> The extension talks to the scoring API defined by `ANALYZE_BASE_URL` in `packages/shared/src/contracts.ts`. In this repo it points at `http://localhost:3000` for local development — start the dev server (or repoint it at your deployed endpoint) so AI scoring works end-to-end.
+
+<div align="right"><a href="#-ghost-job-detector">↑ back to top</a></div>
 
 ---
 
-## Privacy
+## ❓ FAQ & troubleshooting
 
-The extension sends only the **job title, company, location, and description** visible on the page to the API route — it never scrapes behind login walls. Your OpenRouter key is sent in a request header and is **never logged or stored server-side**. No accounts, no analytics, no cross-device sync. The full disclosure lives on the extension's Options page.
+<details>
+<summary><b>The overlay isn't showing up.</b></summary>
+
+Make sure you're on a **job-detail** page (`linkedin.com/jobs/view/…` or an Indeed posting), not a search-results list. Reload the tab after first installing. If you just rebuilt the extension, hit the reload icon on `chrome://extensions`.
+
+</details>
+
+<details>
+<summary><b>Do I have to pay for the AI?</b></summary>
+
+You bring your own OpenRouter key and pay only OpenRouter's pay-as-you-go rate for the default `openai/gpt-4o-mini` model — fractions of a cent per scan. The maintainers never see or pay for your usage.
+
+</details>
+
+<details>
+<summary><b>Does it work without a key?</b></summary>
+
+Yes — the three regex signals (specificity, buzzwords, scam patterns) still run and the weights renormalize across them. The two LLM signals simply sit out until you add a key.
+
+</details>
+
+<details>
+<summary><b>"Couldn't read this posting" — why?</b></summary>
+
+The page didn't expose enough structured content to extract a posting (or you're behind a login/preview state). The extension deliberately shows this instead of faking a score. Try opening the full job-detail view.
+
+</details>
+
+<details>
+<summary><b>Is my OpenRouter key safe?</b></summary>
+
+It's stored only in <code>chrome.storage.local</code> on your device and sent solely in the <code>x-openrouter-key</code> request header. It is never logged or persisted on any server, and never written to a body, URL, or env var.
+
+</details>
+
+<details>
+<summary><b>Which job boards are supported?</b></summary>
+
+LinkedIn and Indeed today. Support is behind a <code>JobBoardAdapter</code> interface, so adding another board is a single self-contained adapter file.
+
+</details>
+
+<div align="right"><a href="#-ghost-job-detector">↑ back to top</a></div>
+
+---
+
+<div align="center">
+
+**Stop applying to ghosts.** 👻
+
+Built with WXT · React · TypeScript · OpenRouter — _BYOK, private by design._
+
+</div>
