@@ -55,4 +55,4 @@ export const ANALYZE_HEADER_KEY = 'x-openrouter-key' as const;
 
 export const ANALYZE_PATH = '/api/analyze-job' as const;
 
-export const ANALYZE_BASE_URL = 'http://localhost:3000' as const;
+export const ANALYZE_BASE_URL = 'https://ghost-job-detector-web.vercel.app' as const;

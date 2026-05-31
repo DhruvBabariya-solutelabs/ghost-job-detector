@@ -12,7 +12,7 @@ export default defineConfig({
       'https://*.linkedin.com/*',
       'https://*.indeed.com/*',
       'https://openrouter.ai/*',
-      'https://ghost-job-detector.vercel.app/*',
+      'https://ghost-job-detector-web.vercel.app/*',
       'http://localhost:3000/*',
     ],
     options_ui: {
