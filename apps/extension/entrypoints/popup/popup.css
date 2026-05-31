@@ -1,0 +1,21 @@
+/**
+ * Popup stylesheet — Foundation phase.
+ *
+ * Imports @ghost/shared/theme.css so Tailwind v4 utilities derived from the
+ * shared @theme block (e.g. `text-risk-legitimate`, `bg-risk-ghost`) become
+ * available inside the extension popup.
+ *
+ * The popup is a fully-rendered HTML page in chrome-extension:// origin —
+ * no Shadow DOM isolation needed here. That's the content-script overlay's
+ * problem (Phase 4).
+ */
+
+@import "@ghost/shared/theme.css";
+
+body {
+  margin: 0;
+  padding: 0.75rem;
+  min-width: 280px;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+}
