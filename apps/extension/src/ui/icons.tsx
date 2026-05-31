@@ -1,15 +1,3 @@
-/**
- * Inline SVG icon set for the popup / side-panel.
- *
- * lucide-react is forbidden project-wide (UI-SPEC line 29) — these are
- * hand-authored, 24×24 viewBox, 1.6px stroke, currentColor. Static JSX (no
- * dangerouslySetInnerHTML) so React escaping defends against any XSS.
- *
- * Every icon renders through <Glyph>, whose single <svg> literal carries
- * aria-hidden + focusable="false" — they are decorative; meaning is always in
- * adjacent text. Stroke discipline: one family, one stroke width, round caps.
- */
-
 import type { ReactNode, SVGProps } from 'react';
 import type { VerdictIconKey } from './verdict';
 
@@ -63,7 +51,6 @@ export function FlagIcon(p: IconProps) {
   );
 }
 
-/** Minimal geometric line-art ghost (icon scale). */
 export function GhostIcon(p: IconProps) {
   return (
     <Glyph {...p}>
@@ -85,8 +72,6 @@ export function ShareIcon(p: IconProps) {
   );
 }
 
-/** Sliders / adjustments — reads clearly as "settings" and stays distinct from
- *  the sun/moon theme toggle (a small gear renders as an ambiguous starburst). */
 export function SettingsIcon(p: IconProps) {
   return (
     <Glyph {...p}>
@@ -186,7 +171,6 @@ export function WifiOffIcon(p: IconProps) {
   );
 }
 
-/** Resolve a verdict's iconKey to its component. */
 export function VerdictIcon({ iconKey, ...props }: IconProps & { iconKey: VerdictIconKey }) {
   switch (iconKey) {
     case 'shield':

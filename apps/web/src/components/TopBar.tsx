@@ -1,26 +1,5 @@
 'use client';
 
-/**
- * TopBar — sticky 48px nav rendered on every Phase 5 route via AppShell.
- *
- * Spec: CONTEXT D-65 + UI-SPEC §"TopBar" lines 415-443.
- *
- * Anatomy:
- *   [● Ghost Job Detector]                 Analyze · Dashboard · Install · ⚙
- *      brand chip (Link → /)               nav links + gear button
- *
- * Active-route logic (UI-SPEC line 439-443):
- *   usePathname() === href ? active : idle.
- *   Active is rendered as a 2px brand-bottom-border at 8px length under the
- *   link text via the ::after pseudo-element + aria-current="page".
- *   Landing /  matches NO nav href → no underline on / (correct behavior;
- *   the brand chip is the home target).
- *
- * Security gates (verified by grep):
- *   - No console output of any level (T-05-16).
- *   - No lucide-react import — gear glyph is inline SVG (UI-SPEC line 31).
- */
-
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
@@ -39,9 +18,7 @@ export function TopBar({ onOpenSettings }: TopBarProps) {
           className="flex items-center gap-2 focus:outline-none focus-visible:ring-[3px] focus-visible:ring-[oklch(0.55_0.18_260/0.4)] rounded-sm px-1"
         >
           <GhostLogo />
-          <span className="text-sm font-medium text-[--color-ink]">
-            Ghost Job Detector
-          </span>
+          <span className="text-sm font-medium text-[--color-ink]">Ghost Job Detector</span>
         </Link>
 
         <div className="flex items-center gap-3 md:gap-4">
@@ -72,7 +49,7 @@ function NavLink({ href, children }: { href: string; children: ReactNode }) {
       className={[
         'text-sm font-medium hover:text-[--color-brand]',
         'transition-colors duration-150',
-        "relative focus:outline-none focus-visible:ring-[3px] focus-visible:ring-[oklch(0.55_0.18_260/0.4)] rounded-sm px-1",
+        'relative focus:outline-none focus-visible:ring-[3px] focus-visible:ring-[oklch(0.55_0.18_260/0.4)] rounded-sm px-1',
         "after:content-[''] after:block after:h-[2px] after:w-5 after:rounded-full after:mx-auto after:mt-1",
         isActive
           ? 'text-[--color-brand] after:bg-[--color-brand]'
@@ -103,9 +80,6 @@ function GhostLogo() {
   );
 }
 
-// Inline gear glyph — UI-SPEC line 31 forbids lucide-react. Static JSX, no
-// dangerouslySetInnerHTML, so React's escaping defends against any XSS attempt
-// even though this is author-controlled (T-04-54 mitigation pattern).
 function GearIcon() {
   return (
     <svg

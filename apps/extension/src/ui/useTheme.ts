@@ -14,7 +14,6 @@ function apply(theme: ThemePref): void {
 }
 
 export function useTheme(): { theme: ThemePref; toggle: () => void } {
-  // index.html paints data-theme="dark" first; reconcile to the real pref on mount.
   const [theme, setThemeState] = useState<ThemePref>('dark');
 
   useEffect(() => {

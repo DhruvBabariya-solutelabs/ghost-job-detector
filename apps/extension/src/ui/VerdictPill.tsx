@@ -1,6 +1,6 @@
 import type { RiskBand } from '@ghost/shared';
-import { VERDICTS } from './verdict';
 import { VerdictIcon } from './icons';
+import { VERDICTS } from './verdict';
 
 interface VerdictPillProps {
   band: RiskBand;
@@ -29,7 +29,6 @@ export function VerdictPill({ band, animate, reducedMotion }: VerdictPillProps) 
           animate && !reducedMotion
             ? 'gjd-pop var(--dur-recolor) var(--ease-expo) both'
             : undefined,
-        // pill appears just after the gauge starts settling
         animationDelay: animate && !reducedMotion ? '520ms' : undefined,
         willChange: 'transform',
       }}

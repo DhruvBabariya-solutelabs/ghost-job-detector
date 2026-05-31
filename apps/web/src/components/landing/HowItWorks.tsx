@@ -1,19 +1,3 @@
-/**
- * HowItWorks (landing) — 5-signal explainer.
- *
- * UI-SPEC §"Landing page — How it works block" lines 532-572 + §Copywriting
- * lines 220-238 (body copy verbatim, layout deviates).
- *
- * Layout deviates from UI-SPEC card-grid spec to an editorial numbered list:
- * weights are the data, so they drive the visual hierarchy. Hairline dividers,
- * no card boxes — kills the "5 identical cards" pattern.
- *
- * Server component. Copy contract preserved character-for-character.
- *
- * Weight percentages MUST match DEFAULT_WEIGHTS from Phase 3 SUMMARY:
- *   AI 30 / Specificity 25 / Buzzword 20 / Scam 15 / LLM 10 (sums to 100).
- */
-
 import type { SignalKey } from '@ghost/shared';
 import { SIGNAL_LABELS } from '@/lib/labels';
 
@@ -26,15 +10,13 @@ const SIGNAL_WEIGHTS: Record<SignalKey, string> = {
 };
 
 const SIGNAL_BODY: Record<SignalKey, string> = {
-  ai: 'Looks for the rhythm and word choice of GPT-style filler. Postings written by a hiring manager have texture; postings written by a chatbot don\'t.',
+  ai: "Looks for the rhythm and word choice of GPT-style filler. Postings written by a hiring manager have texture; postings written by a chatbot don't.",
   specificity:
     'Checks whether the posting names a salary range, a tech stack, a team size, a reporting line. The absence of specifics is the loudest signal of all.',
   buzzword:
     'Counts how often the posting leans on rockstar / ninja / fast-paced / self-starter language. One or two is fine. Five is a tell.',
-  scam:
-    'Flags urgency pressure, unrealistic comp claims, requests to message on WhatsApp or a personal email, and other patterns that show up in known job scams.',
-  llm:
-    'Sends the posting to an LLM for a structured second opinion on whether it reads as a real listing, with strict-output guardrails so the model can\'t be tricked by injection.',
+  scam: 'Flags urgency pressure, unrealistic comp claims, requests to message on WhatsApp or a personal email, and other patterns that show up in known job scams.',
+  llm: "Sends the posting to an LLM for a structured second opinion on whether it reads as a real listing, with strict-output guardrails so the model can't be tricked by injection.",
 };
 
 const SIGNAL_ORDER: readonly SignalKey[] = [
@@ -75,9 +57,7 @@ export function HowItWorks() {
                 <span className="font-mono tabular-nums text-3xl lg:text-4xl font-semibold text-[--color-brand] leading-none">
                   {SIGNAL_WEIGHTS[key]}
                 </span>
-                <span className="font-mono text-sm text-[--color-brand]/70 font-medium">
-                  %
-                </span>
+                <span className="font-mono text-sm text-[--color-brand]/70 font-medium">%</span>
               </div>
 
               <div>

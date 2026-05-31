@@ -1,22 +1,20 @@
-import { useEffect, useId, useRef } from 'react';
 import type { RiskBand } from '@ghost/shared';
-import { VERDICTS } from './verdict';
+import { useEffect, useId, useRef } from 'react';
 import { DUR, EASE, SPRING_DEFAULT, springDurationMs, springKeyframes } from './motion';
+import { VERDICTS } from './verdict';
 
 const VIEW = 220;
 const CENTER = VIEW / 2;
 const RADIUS = 88;
 const STROKE = 14;
-const SWEEP = 270; // degrees of arc
-const START = 225; // compass deg (clockwise from top); bottom-left
+const SWEEP = 270;
+const START = 225;
 
-/** Compass angle (deg, clockwise from top) → cartesian point on the gauge. */
 function pt(angleDeg: number, r = RADIUS): { x: number; y: number } {
   const a = (angleDeg * Math.PI) / 180;
   return { x: CENTER + r * Math.sin(a), y: CENTER - r * Math.cos(a) };
 }
 
-/** SVG arc path across `sweep` degrees starting at `start`, clockwise. */
 function arcPath(start: number, sweep: number, r = RADIUS): string {
   const a = pt(start, r);
   const b = pt(start + sweep, r);
@@ -27,7 +25,6 @@ function arcPath(start: number, sweep: number, r = RADIUS): string {
 export interface TrustGaugeProps {
   score: number;
   band: RiskBand;
-  /** Animate the draw-on + count-up; false snaps to final (revisiting a result). */
   animate: boolean;
   reducedMotion: boolean;
   size?: number;
@@ -43,7 +40,7 @@ export function TrustGauge({ score, band, animate, reducedMotion, size = 200 }: 
   const clamped = Math.max(0, Math.min(100, score));
   const frac = clamped / 100;
   const needleAngle = START + frac * SWEEP;
-  const finalOffset = 1 - frac; // pathLength normalised to 1
+  const finalOffset = 1 - frac;
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: the reveal must re-run only when the score/band/animate flag changes — the omitted values (frac, finalOffset, clamped, needleAngle) are all derived from score and recomputed inside the effect.
   useEffect(() => {
@@ -61,14 +58,12 @@ export function TrustGauge({ score, band, animate, reducedMotion, size = 200 }: 
       return;
     }
 
-    // Arc draw-on.
     const arcAnim = arc.animate([{ strokeDashoffset: 1 }, { strokeDashoffset: finalOffset }], {
       duration: DUR.hero,
       easing: EASE.expo,
       fill: 'forwards',
     });
 
-    // Needle spring overshoot from the start (0) angle to the score angle.
     const springDur = springDurationMs(SPRING_DEFAULT);
     const needleAnim = needle.animate(
       springKeyframes((p) => ({
@@ -77,7 +72,6 @@ export function TrustGauge({ score, band, animate, reducedMotion, size = 200 }: 
       { duration: springDur, easing: 'linear', fill: 'forwards' },
     );
 
-    // Count-up driven off the arc animation's own clock so it tracks the draw.
     let raf = 0;
     const tick = (): void => {
       const ct = typeof arcAnim.currentTime === 'number' ? arcAnim.currentTime : DUR.hero;
@@ -96,7 +90,7 @@ export function TrustGauge({ score, band, animate, reducedMotion, size = 200 }: 
   }, [score, band, animate, reducedMotion]);
 
   const trackPath = arcPath(START, SWEEP);
-  const needleTip = pt(START, RADIUS - STROKE - 6); // before rotation (angle START)
+  const needleTip = pt(START, RADIUS - STROKE - 6);
 
   return (
     <div
@@ -127,7 +121,6 @@ export function TrustGauge({ score, band, animate, reducedMotion, size = 200 }: 
           </filter>
         </defs>
 
-        {/* Track */}
         <path
           d={trackPath}
           fill="none"
@@ -136,7 +129,6 @@ export function TrustGauge({ score, band, animate, reducedMotion, size = 200 }: 
           strokeLinecap="round"
         />
 
-        {/* Glow (blurred copy of the value arc, opacity-pulsing) */}
         <path
           d={trackPath}
           fill="none"
@@ -151,7 +143,6 @@ export function TrustGauge({ score, band, animate, reducedMotion, size = 200 }: 
           style={{ opacity: 0.5 }}
         />
 
-        {/* Value arc */}
         <path
           ref={arcRef}
           d={trackPath}
@@ -165,7 +156,6 @@ export function TrustGauge({ score, band, animate, reducedMotion, size = 200 }: 
           style={{ willChange: 'stroke-dashoffset' }}
         />
 
-        {/* Needle — rotates about centre */}
         <g
           ref={needleRef}
           style={{
@@ -189,7 +179,6 @@ export function TrustGauge({ score, band, animate, reducedMotion, size = 200 }: 
         <circle cx={CENTER} cy={CENTER} r={6} fill="var(--bg)" opacity={0.25} />
       </svg>
 
-      {/* Centre numeral (HTML for crisp tabular-nums type) */}
       <div
         style={{
           position: 'absolute',

@@ -1,81 +1,14 @@
-/**
- * Non-job-posting fixture set for AI-SPEC §5 Dimension 11 verification.
- *
- * These fixtures are designed to FAIL the D-25 heuristic gate in
- * `packages/scoring/src/extractors/triage.ts`. `isLikelyJobPosting()` must
- * return `false` for each entry so that `analyzeJob` short-circuits to the
- * D-26 dominant-negative response shape.
- *
- * Gate-fail conditions (D-25):
- *   - No JOB_TERMS keyword match in description (primary failure path), OR
- *   - description.length < 200 or > 50_000 (length gate failure)
- *
- * JOB_TERMS regex (triage.ts):
- *   /\b(role|engineer|manager|developer|designer|analyst|responsibilities|
- *       requirements|qualifications|apply|position|hiring)\b/i
- *
- * Each fixture's `expectedLeadingReasonText` is the CANONICAL wording from
- * `DOMINANT_NEGATIVE_REASON` in `packages/scoring/src/label.ts` (BLOCKER 1
- * single-source-of-truth fix). Plan 03-06 Dim 11 asserts string equality
- * between `response.reasons[0].text` and this constant byte-for-byte.
- *
- * @module fixtures/non-postings
- */
-
 import type { JobPosting } from '@ghost/shared';
 
-// ---------------------------------------------------------------------------
-// Interface
-// ---------------------------------------------------------------------------
-
-/**
- * A non-posting fixture that must trip the D-25 heuristic gate.
- * `analyzeJob(posting, { ai: null })` must return `score: 50`.
- */
 export interface NonPostingFixture {
-  /** Kebab-case unique identifier — no emoji (Pattern H). */
   id: string;
-  /**
-   * A JobPosting whose description contains NO JOB_TERMS keyword
-   * (so isLikelyJobPosting returns false) — OR is too short/too long.
-   */
   posting: JobPosting;
-  /**
-   * D-26 neutral midpoint. The dominant-negative response always emits
-   * score: 50 regardless of description content.
-   */
   expectedScore: 50;
-  /**
-   * Byte-for-byte match of DOMINANT_NEGATIVE_REASON.text from label.ts.
-   * Dim 11 assertion: `response.reasons[0].text === expectedLeadingReasonText`.
-   */
   expectedLeadingReasonText: string;
 }
 
-// ---------------------------------------------------------------------------
-// Canonical dominant-negative text (BLOCKER 1 single source of truth)
-// MUST match DOMINANT_NEGATIVE_REASON.text in packages/scoring/src/label.ts
-// byte-for-byte. Do NOT paraphrase — calibrate.ts asserts string equality.
-// ---------------------------------------------------------------------------
+const DOMINANT_NEGATIVE_TEXT = "This doesn't look like a job posting - score may not be meaningful";
 
-const DOMINANT_NEGATIVE_TEXT =
-  "This doesn't look like a job posting - score may not be meaningful";
-
-// ---------------------------------------------------------------------------
-// Non-posting fixtures
-// ---------------------------------------------------------------------------
-
-/**
- * Four non-posting inputs designed to trigger the D-25 heuristic gate
- * short-circuit per AI-SPEC §5 Dimension 11.
- *
- * Criteria for each description:
- * 1. `lorem-200`: length >= 200 but zero job-terms keywords
- * 2. `resume-excerpt`: a non-tech resume with no job-terms keyword
- *    (teacher's resume — avoids manager/analyst/developer/engineer)
- * 3. `wikipedia-rfc-2616`: HTTP/1.1 spec prose — technical but no job-terms
- * 4. `song-lyrics`: out-of-copyright song excerpt — no job-terms
- */
 export const NON_POSTING_FIXTURES: NonPostingFixture[] = [
   {
     id: 'lorem-200',
@@ -83,8 +16,6 @@ export const NON_POSTING_FIXTURES: NonPostingFixture[] = [
       title: 'x',
       company: '',
       location: '',
-      // 'lorem ipsum' repeated 20x = 240 chars. No job-terms keyword.
-      // Gate fails on: no JOB_TERMS match (length >= 200 but keyword absent).
       description:
         'lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor ' +
         'incididunt ut labore et dolore magna aliqua ut enim ad minim veniam quis nostrud ' +
@@ -101,9 +32,6 @@ export const NON_POSTING_FIXTURES: NonPostingFixture[] = [
       title: 'x',
       company: '',
       location: '',
-      // Teacher's resume excerpt — avoids: role, engineer, manager, developer, designer,
-      // analyst, responsibilities, requirements, qualifications, apply, position, hiring.
-      // Uses "taught", "coordinated", "guided", "assessed" instead.
       description:
         'Emily Chen — Educator and Curriculum Specialist\n\n' +
         'Professional Summary: Dedicated K-12 science instructor with 8 years of classroom ' +
@@ -130,8 +58,6 @@ export const NON_POSTING_FIXTURES: NonPostingFixture[] = [
       title: 'x',
       company: '',
       location: '',
-      // Wikipedia-style paragraph on HTTP/1.1 (RFC 2616) — no job-terms keywords.
-      // Deliberately avoids: engineer, developer, analyst, manager, etc.
       description:
         'HTTP/1.1 (Hypertext Transfer Protocol version 1.1) was formally specified in RFC 2616, ' +
         'published in June 1999 by the IETF. It introduced persistent connections by default, ' +
@@ -157,14 +83,12 @@ export const NON_POSTING_FIXTURES: NonPostingFixture[] = [
       title: 'x',
       company: '',
       location: '',
-      // Out-of-copyright folk song excerpt (traditional, public domain).
-      // Avoids all JOB_TERMS keywords. 450+ chars.
       description:
-        "Oh Shenandoah, I long to hear you,\nAway, you rolling river.\n" +
+        'Oh Shenandoah, I long to hear you,\nAway, you rolling river.\n' +
         "Oh Shenandoah, I long to hear you,\nAway, I'm bound away, 'cross the wide Missouri.\n\n" +
         "'Tis seven years since last I've seen you,\nAway, you rolling river.\n" +
         "'Tis seven years since last I've seen you,\nAway, I'm bound away, 'cross the wide Missouri.\n\n" +
-        "Oh Shenandoah, I love your daughter,\nAway, you rolling river.\n" +
+        'Oh Shenandoah, I love your daughter,\nAway, you rolling river.\n' +
         "Oh Shenandoah, I love your daughter,\nAway, I'm bound away, 'cross the wide Missouri.\n\n" +
         "For her I've crossed the rolling water,\nAway, you rolling river.\n" +
         "For her I've crossed the rolling water,\nAway, I'm bound away, 'cross the wide Missouri.",

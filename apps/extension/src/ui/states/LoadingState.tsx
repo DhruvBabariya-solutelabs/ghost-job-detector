@@ -1,12 +1,3 @@
-/**
- * Loading — a radar sweep over the "captured posting" while the ghost phases
- * translucent. The circular radar sits exactly where the gauge ring will be, so
- * the crossfade into the result reads as one continuous element (shared anchor).
- *
- * 60fps: the sweep is a single rotating <g> (transform only); the skeleton
- * shimmer is a translateX strip. Reduced-motion: sweep holds, no shimmer.
- */
-
 import { GhostMascot } from '../GhostMascot';
 import { useReducedMotion } from '../useReducedMotion';
 
@@ -103,7 +94,6 @@ export function LoadingState({ size = 200 }: { size?: number }) {
         Scanning this posting…
       </span>
 
-      {/* Captured-posting skeleton */}
       <div
         className="gjd-card"
         style={{ width: '100%', padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}

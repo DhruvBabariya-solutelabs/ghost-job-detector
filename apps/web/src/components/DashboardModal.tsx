@@ -1,30 +1,10 @@
 'use client';
 
-/**
- * DashboardModal — read-only viewer for a single saved analysis (UI-SPEC
- * §`/dashboard` page §"Read-only modal" lines 758-769).
- *
- * Surfaces:
- *   - role="dialog" + aria-modal="true" + aria-labelledby for screen readers
- *   - Focus moves to the X close button on mount (UI-SPEC §Accessibility line 1095)
- *   - Escape key + backdrop click + X button all dismiss
- *   - Body scroll lock while open (state restored on unmount)
- *   - ScoreDial at size=128 + RiskLabel + ReasonsList + SignalBreakdownDrawer
- *     (same component vocabulary as /analyze — read-only here, no Save button)
- *   - Delete-from-history with two-click inline confirm (4s auto-dismiss).
- *     First click reveals "Click again to confirm" pill; second click within
- *     the window calls onDelete (UI-SPEC line 316).
- *
- * Focus-trap (tab-cycle within the modal) is deferred to Phase 8 polish per
- * UI-SPEC line 1094 — Phase 5 ships focus-on-open + Escape, which is enough
- * for the demo flow.
- */
-
 import { useEffect, useId, useRef, useState } from 'react';
 import type { HistoryEntry } from '@/lib/storage';
-import { ScoreDial } from './ScoreDial';
-import { RiskLabel } from './RiskLabel';
 import { ReasonsList } from './ReasonsList';
+import { RiskLabel } from './RiskLabel';
+import { ScoreDial } from './ScoreDial';
 import { SignalBreakdownDrawer } from './SignalBreakdownDrawer';
 
 export interface DashboardModalProps {
@@ -35,13 +15,7 @@ export interface DashboardModalProps {
 
 function XIcon() {
   return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 16 16"
-      fill="none"
-      aria-hidden="true"
-    >
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
       <path
         d="M3 3 L13 13 M13 3 L3 13"
         stroke="currentColor"
@@ -52,18 +26,13 @@ function XIcon() {
   );
 }
 
-export function DashboardModal({
-  entry,
-  onClose,
-  onDelete,
-}: DashboardModalProps) {
+export function DashboardModal({ entry, onClose, onDelete }: DashboardModalProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const titleId = useId();
   const drawerId = useId();
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
 
-  // Mount: focus the close button + attach Escape listener + lock body scroll.
   useEffect(() => {
     closeButtonRef.current?.focus();
     const handleEscape = (e: KeyboardEvent): void => {
@@ -78,7 +47,6 @@ export function DashboardModal({
     };
   }, [onClose]);
 
-  // Delete-confirm 4s auto-dismiss window (UI-SPEC line 317).
   useEffect(() => {
     if (!deleteConfirm) return;
     const t = setTimeout(() => setDeleteConfirm(false), 4000);
@@ -110,18 +78,13 @@ export function DashboardModal({
       aria-modal="true"
       aria-labelledby={titleId}
     >
-      {/* Backdrop — click-outside closes. aria-hidden suppresses a11y lint rules
-          for useKeyWithClickEvents + noStaticElementInteractions — keyboard users
-          dismiss via Escape (line 73) or X-button (focused on mount, line 67). */}
       <div
         onClick={onClose}
         aria-hidden="true"
         className="absolute inset-0 bg-black/40 transition-opacity duration-200"
       />
 
-      {/* Modal panel */}
       <div className="relative max-w-[480px] w-[90vw] max-h-[80vh] overflow-y-auto bg-[--color-surface] rounded-xl shadow-[--shadow-overlay] p-6">
-        {/* Header: title + sub-title + X dismiss */}
         <div className="flex items-start justify-between gap-2 mb-4">
           <div className="flex-1 min-w-0">
             <h2
@@ -146,7 +109,6 @@ export function DashboardModal({
           </button>
         </div>
 
-        {/* Score block — read-only ScoreDial(128) + RiskLabel + reasons + drawer */}
         <div className="flex flex-col items-center gap-3">
           <ScoreDial
             score={score}
@@ -170,14 +132,12 @@ export function DashboardModal({
           </div>
         </div>
 
-        {/* Footer: Delete from history with inline-confirm */}
         <div className="mt-6 flex items-center justify-end gap-2">
           {deleteConfirm && (
             <span
               className="text-xs inline-block px-2 py-1 rounded-sm"
               style={{
-                backgroundColor:
-                  'color-mix(in oklch, #dc2626 12%, transparent)',
+                backgroundColor: 'color-mix(in oklch, #dc2626 12%, transparent)',
                 color: '#b91c1c',
               }}
             >

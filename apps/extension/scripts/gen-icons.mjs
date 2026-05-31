@@ -1,23 +1,9 @@
-/**
- * Generates the Chrome extension icon set from a single master SVG.
- *
- * The mark is the side-panel/popup ghost (BrandMark) on a brand-violet gradient
- * rounded square, with the eyes knocked out in the deep violet so it reads as a
- * cut-out — crisp from 128px down to the 16px toolbar size.
- *
- * Output: public/icon.svg (master) + public/icon/{16,32,48,128}.png.
- * WXT auto-discovers public/icon/{size}.png and wires them into the manifest's
- * `icons` + `action.default_icon`.
- *
- * Run: node scripts/gen-icons.mjs   (re-run if the logo changes)
- */
-import sharp from 'sharp';
 import { mkdirSync, writeFileSync } from 'node:fs';
+import sharp from 'sharp';
 
 const VIOLET_LIGHT = '#8b6cff';
 const VIOLET_DEEP = '#6a3ff5';
 
-// 128 viewBox. Ghost = BrandMark path (24-box) scaled ×4 and centred.
 const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">

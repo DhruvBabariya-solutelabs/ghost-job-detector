@@ -1,22 +1,9 @@
-/**
- * EmptyState — the D-60 "couldn't read this posting" surface + the network-error
- * variant. Dark premium glass, matching the result overlay.
- *
- * Self-contained shell: renders its own .gjd-ov-card container + OverlayHeader so
- * content.ts can render <EmptyState/> directly when the adapter returned null
- * after the 5-second MutationObserver retry.
- *
- * External link safety: target="_blank" rel="noopener" defeats reverse
- * tabnabbing (T-04-40 STRIDE mitigation).
- */
-
 import { OverlayHeader } from './OverlayHeader.js';
 
 interface IconProps {
   className?: string;
 }
 
-/** Open-book SVG glyph — minimal line art. */
 function OpenBookIcon({ className }: IconProps) {
   return (
     <svg
@@ -36,7 +23,6 @@ function OpenBookIcon({ className }: IconProps) {
   );
 }
 
-/** Right-chevron glyph for the CTA. */
 function ChevronRightIcon({ className }: IconProps) {
   return (
     <svg
@@ -56,15 +42,11 @@ function ChevronRightIcon({ className }: IconProps) {
 
 export interface EmptyStateProps {
   onDismiss: () => void;
-  /** When true, renders the network-error variant with a Retry button instead
-   *  of the extraction-failure copy. Pass onRetry to wire the Retry action. */
   isNetworkError?: boolean;
-  /** Called when the user clicks "Retry" in the network-error variant. */
   onRetry?: () => void;
 }
 
-const SHELL =
-  'gjd-ov-card fixed top-4 right-4 w-80 overflow-hidden font-sans z-[2147483647]';
+const SHELL = 'gjd-ov-card fixed top-4 right-4 w-80 overflow-hidden font-sans z-[2147483647]';
 const CTA =
   'inline-flex items-center gap-1 mt-2 text-sm font-semibold text-(--ov-brand) hover:underline focus:outline-none focus-visible:ring-[3px] focus-visible:ring-[#7c5cff66] rounded-sm';
 

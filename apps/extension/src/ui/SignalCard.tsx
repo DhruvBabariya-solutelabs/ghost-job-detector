@@ -1,23 +1,7 @@
-/**
- * SignalCard — one "why this score" tile, built from a Reason.
- *
- * Premium "signal tile" (2026 refit): a leading direction chip (trend-up green
- * for in-its-favour / trend-down verdict-coloured for risk) anchors the card; a
- * gradient hairline border + top-lit glass gives depth without heavy shadow; the
- * reason text leads with a dotted intensity pill (Strong / Notable / Mild); and a
- * glowing gradient impact meter — sized by |signed| vs the strongest reason — is
- * the hero data viz. Tap to expand reveals the evidence quote + a "why it matters"
- * line. Status is conveyed by text AND colour (a11y), never colour alone.
- *
- * Hover lifts 2px + shadow bloom (transform/opacity). Press scales 0.97. Expand
- * uses the grid 0fr→1fr technique with an opacity/translate inner reveal. All
- * motion is transform/opacity and respects reduced-motion.
- */
-
-import { useState } from 'react';
 import type { Reason, RiskBand, SignalKey } from '@ghost/shared';
-import { SIGNAL_LABELS, strengthLabel, VERDICTS } from './verdict';
+import { useState } from 'react';
 import { ChevronIcon } from './icons';
+import { SIGNAL_LABELS, strengthLabel, VERDICTS } from './verdict';
 
 const POSITIVE = '#34e89e';
 const POSITIVE_DEEP = '#0b6e58';
@@ -41,7 +25,6 @@ interface SignalCardProps {
   reducedMotion: boolean;
 }
 
-/** Trend arrow — up-right for a score-raising signal, down-right for risk. */
 function TrendArrow({ up, color }: { up: boolean; color: string }) {
   return (
     <svg
@@ -80,8 +63,6 @@ export function SignalCard({
   const quoted = reason.evidenceQuote ? `“${reason.evidenceQuote}”` : '';
   const move = animate && !reducedMotion;
 
-  // Gradient hairline border: opaque-ish accent at the top-left fading into the
-  // neutral border colour — premium edge without a hard rule (2026 trend).
   const cardBackground = `linear-gradient(var(--surface), var(--surface)) padding-box, linear-gradient(150deg, color-mix(in oklab, ${accent} 55%, transparent), color-mix(in oklab, ${accent} 6%, var(--border)) 58%) border-box`;
 
   return (
@@ -114,7 +95,6 @@ export function SignalCard({
           boxSizing: 'border-box',
         }}
       >
-        {/* Direction chip — the card's visual anchor. */}
         <span
           aria-hidden="true"
           style={{
@@ -178,7 +158,6 @@ export function SignalCard({
             </span>
           </span>
 
-          {/* meta row: signal name + glowing impact meter + chevron */}
           <span style={{ display: 'flex', alignItems: 'center', gap: 9, marginTop: 9 }}>
             <span
               style={{
@@ -230,7 +209,6 @@ export function SignalCard({
         </span>
       </button>
 
-      {/* Expandable detail */}
       <div
         style={{
           display: 'grid',

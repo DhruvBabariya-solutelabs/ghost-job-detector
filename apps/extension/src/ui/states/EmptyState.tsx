@@ -1,8 +1,3 @@
-/**
- * Empty / no-posting — a friendly peeking ghost and a prompt to open a job page
- * or try a sample. Never alarmist; calm and inviting.
- */
-
 import type { ReactNode } from 'react';
 import { GhostMascot } from '../GhostMascot';
 import { useReducedMotion } from '../useReducedMotion';
@@ -10,7 +5,6 @@ import { useReducedMotion } from '../useReducedMotion';
 interface EmptyStateProps {
   title?: string;
   body?: string;
-  /** Action area (e.g. sample chips) rendered below the copy. */
   children?: ReactNode;
 }
 
@@ -31,8 +25,6 @@ export function EmptyState({
         gap: 14,
       }}
     >
-      {/* Full ghost with vertical breathing room so the idle bob never clips
-          the dome (the parent must not constrain its height + the 5px lift). */}
       <div style={{ paddingTop: 6, paddingBottom: 2, overflow: 'visible' }}>
         <GhostMascot mode="idle" size={88} still={reduced} />
       </div>

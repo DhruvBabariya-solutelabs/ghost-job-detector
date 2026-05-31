@@ -1,23 +1,18 @@
-/* Inter — progressive enhancement. Falls back to the system geometric stack
-   when offline (the extension's offline state must still render cleanly). */
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
 :root {
   color-scheme: dark;
 
-  /* ---- Brand (constant across verdicts) ---- */
   --brand: #7c5cff;
   --brand-ink: #ffffff;
   --brand-glow: rgba(124, 92, 255, 0.45);
 
-  /* ---- Verdict accent (runtime — defaults to brand until a score settles) ---- */
   --v-from: var(--brand);
   --v-to: var(--brand);
   --v-solid: var(--brand);
   --v-deep: #b8a6ff;
   --v-glow: var(--brand-glow);
 
-  /* ---- Neutral canvas (dark default) ---- */
   --bg: #0a0a0f;
   --bg-elev: #111119;
   --surface: rgba(255, 255, 255, 0.045);
@@ -33,24 +28,21 @@
   --ink-muted: #8b8c9b;
   --ink-faint: #5c5d6e;
 
-  /* Ambient radial gradient + ~1% noise are painted as layered backgrounds. */
   --ambient: radial-gradient(
     120% 80% at 50% -10%,
     color-mix(in oklab, var(--v-from) 16%, transparent),
     transparent 60%
   );
 
-  /* ---- Type ---- */
   --font: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --t-2xs: 0.6875rem; /* 11 */
-  --t-xs: 0.75rem; /* 12 */
-  --t-sm: 0.8125rem; /* 13 */
-  --t-base: 0.875rem; /* 14 */
-  --t-md: 1rem; /* 16 */
-  --t-lg: 1.25rem; /* 20 */
-  --t-display: 3.25rem; /* gauge numeral */
+  --t-2xs: 0.6875rem;
+  --t-xs: 0.75rem;
+  --t-sm: 0.8125rem;
+  --t-base: 0.875rem;
+  --t-md: 1rem;
+  --t-lg: 1.25rem;
+  --t-display: 3.25rem;
 
-  /* ---- Space (4pt rhythm) ---- */
   --s-1: 4px;
   --s-2: 8px;
   --s-3: 12px;
@@ -59,17 +51,14 @@
   --s-6: 24px;
   --s-8: 32px;
 
-  /* ---- Radius ---- */
   --r-card: 12px;
   --r-container: 20px;
   --r-pill: 999px;
 
-  /* ---- Elevation ---- */
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px -8px rgba(0, 0, 0, 0.5);
   --shadow-pop: 0 2px 6px rgba(0, 0, 0, 0.35), 0 18px 48px -12px rgba(0, 0, 0, 0.65);
   --ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--brand);
 
-  /* ---- Motion ---- */
   --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-quart: cubic-bezier(0.25, 1, 0.5, 1);
   --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
@@ -105,10 +94,6 @@
   --ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--brand);
 }
 
-/* ===================================================================== */
-/* Base                                                                  */
-/* ===================================================================== */
-
 * {
   box-sizing: border-box;
 }
@@ -129,13 +114,8 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* ===================================================================== */
-/* Scrollbars — thin, rounded, translucent; theme-aware. Chromium-only    */
-/* extension pages, so the WebKit pseudo-elements are safe.               */
-/* ===================================================================== */
-
 * {
-  scrollbar-width: thin; /* Firefox / standard */
+  scrollbar-width: thin;
   scrollbar-color: var(--scroll-thumb) transparent;
 }
 
@@ -147,8 +127,6 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  /* transparent border + padding-box clip gives a slim ~6px pill with breathing
-     room inside the 10px gutter, instead of a chunky edge-to-edge bar. */
   background: var(--scroll-thumb);
   background-clip: padding-box;
   border: 2px solid transparent;
@@ -169,8 +147,6 @@ body {
     "cv01" 1;
 }
 
-/* The painted canvas: base color, ambient verdict radial, and ~1% noise.
-   Noise is an inline SVG turbulence at very low alpha — no network asset. */
 .gjd-canvas {
   position: relative;
   background-color: var(--bg);
@@ -198,7 +174,6 @@ body {
   mix-blend-mode: multiply;
 }
 
-/* ---- Glass card ---- */
 .gjd-card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -207,7 +182,6 @@ body {
   -webkit-backdrop-filter: blur(12px) saturate(1.2);
 }
 
-/* ---- Focus ring (brand violet, constant) ---- */
 .gjd-focus:focus-visible {
   outline: none;
   box-shadow: var(--ring);
@@ -215,10 +189,6 @@ body {
 .gjd-focus {
   outline: none;
 }
-
-/* ===================================================================== */
-/* Interaction states (hover lift, shadow bloom, press scale)            */
-/* ===================================================================== */
 
 .gjd-iconbtn {
   transition:
@@ -234,7 +204,6 @@ body {
   transform: scale(0.92);
 }
 
-/* Reason cards: lift 2px + shadow bloom on hover, press scale */
 .gjd-signal {
   transition:
     transform var(--dur-micro) var(--ease-quart),
@@ -247,7 +216,6 @@ body {
   background: var(--surface-2);
 }
 
-/* Primary CTA — violet, glow bloom on hover, press scale */
 .gjd-cta {
   transition:
     transform var(--dur-micro) var(--ease-quart),
@@ -264,7 +232,6 @@ body {
   transform: scale(0.97);
 }
 
-/* Sample chips + history rows */
 .gjd-chip {
   transition:
     transform var(--dur-micro) var(--ease-quart),
@@ -283,10 +250,6 @@ body {
 .gjd-row:hover {
   background: var(--surface-2);
 }
-
-/* ===================================================================== */
-/* Keyframes — transform/opacity only                                    */
-/* ===================================================================== */
 
 @keyframes gjd-rise {
   from {
@@ -378,7 +341,6 @@ body {
   }
 }
 
-/* Reveal helpers consumed by JS-staggered lists via inline animation-delay. */
 .gjd-rise {
   animation: gjd-rise var(--dur-standard) var(--ease-expo) both;
 }

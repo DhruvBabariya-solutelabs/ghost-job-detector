@@ -1,81 +1,13 @@
-/**
- * Calibration fixture set for the Ghost Job scoring engine (ENG-11 / CONTEXT D-29).
- *
- * This file is the REGRESSION GATE for Phase 3. Every CI run (and every weight-tuning
- * iteration per CONTEXT D-28) must hold ≤ 2/20 misclassifications when run through
- * `packages/scoring/scripts/calibrate.ts` in heuristic-only mode (`ai: null`).
- *
- * AI-SPEC §5 Reference Dataset composition (lines 853-867):
- *   10 known-legitimate (expectedBin in {'legitimate', 'caution'}):
- *     ≥ 2 faang-real     — Meta + Stripe; buzzword-heavy but specific (D-30 + D-31)
- *     ≥ 2 small-startup-vague — YC-batch; vague but human-voiced (D-32 floor 0.9)
- *     ≥ 2 intl-v1-blindspot  — Bangalore + London; salary may be absent by law
- *     4  generic-real        — mid-size US, well-disclosed
- *   10 known-suspicious (expectedBin in {'suspicious', 'ghost'}):
- *     ≥ 3 scam-classic       — messaging-app contact + urgency + unrealistic comp
- *     ≥ 3 ai-slop            — template-y prose, many buzzwords, no specifics
- *     ≥ 2 borderline         — vague but no scam; tests AI-slop-vs-scam distinction
- *     1  scam-equipment      — buy-equipment-from-our-vendor pattern
- *     1  scam-crypto         — $500/day reviewing apps
- *
- * AI-SPEC §5 Labeling (lines 869-874): the hackathon team proxies all four expert
- * roles (senior recruiter / career coach / anti-fraud researcher / employment lawyer)
- * via these hand-binned fixtures. Re-binning MUST be documented in the note field —
- * never silent.
- *
- * Sub-pack tag convention: every `note` begins with the sub-pack tag followed by ` | `.
- * calibrate.ts slices sub-packs via `FIXTURES.filter(f => f.note.startsWith('faang-real'))`.
- *
- * CONTEXT D-28: These fixtures are the regression gate, NOT the source of weights.
- * If the engine's DEFAULT_WEIGHTS pass ≤ 2/20 on this set, ship unchanged.
- * If not, tune weights within the D-28 bounds and re-run.
- *
- * @module fixtures/postings
- */
-
 import type { JobPosting } from '@ghost/shared';
 
-// ---------------------------------------------------------------------------
-// Fixture interface (CONTEXT D-29 locked shape)
-// ---------------------------------------------------------------------------
-
-/**
- * A single calibration fixture: a hand-binned job posting with the expected
- * risk band the scoring engine must produce (≤ 2 misclassifications / 20).
- */
 export interface Fixture {
-  /** Kebab-case unique identifier — no emoji (Pattern H). */
   id: string;
-  /** Job posting that satisfies JobPostingSchema (title/company/location/description/sourceUrl?). */
   posting: JobPosting;
-  /**
-   * Hand-assigned expected risk band. Must be one of the 4 lowercase RiskBand
-   * keys (Phase-2 D-19 lock) — NOT display labels like 'Legitimate'.
-   */
   expectedBin: 'legitimate' | 'caution' | 'suspicious' | 'ghost';
-  /**
-   * Hand-binning rationale starting with the sub-pack tag.
-   * Documents which AI-SPEC §1b domain rubric row the fixture exercises.
-   * No emoji (Pattern H).
-   */
   note: string;
 }
 
-// ---------------------------------------------------------------------------
-// Calibration fixtures — EXACTLY 20 entries
-// ---------------------------------------------------------------------------
-
-/**
- * The 20 hand-binned postings for Phase-3 regression testing (ENG-11).
- * Order: 10 known-legitimate (indices 0-9), then 10 known-suspicious (indices 10-19).
- */
 export const FIXTURES: Fixture[] = [
-  // =========================================================================
-  // BLOCK 1: KNOWN LEGITIMATE (expectedBin: 'legitimate' or 'caution')
-  // =========================================================================
-
-  // --- faang-real (>=2 required) ---
-
   {
     id: 'meta-l5-swe',
     posting: {
@@ -105,7 +37,6 @@ Apply via: careers.meta.com (internal ATS link).`,
     expectedBin: 'legitimate',
     note: 'faang-real | Meta SWE L5 — 3 buzzwords (rockstar-free) + all 8 specificity fields present; D-30 log cap + D-31 specificity-trumps-buzzwords keeps score in legitimate band. AI-SPEC §1b: salary specificity + tech stack + named reporting + team size.',
   },
-
   {
     id: 'stripe-staff-eng',
     posting: {
@@ -135,9 +66,6 @@ Apply at stripe.com/jobs. No third-party recruiters.`,
     expectedBin: 'legitimate',
     note: 'faang-real | Stripe Staff Eng — 2 buzzwords + all 8 specificity fields present (salary, stack, yoe, location, benefits, reporting, team, timeline); D-31 does not trigger (buzz count < 3) but buzz ghostiness is low so score stays in legitimate band.',
   },
-
-  // --- small-startup-vague (>=2 required) ---
-
   {
     id: 'yc-batch-founder',
     posting: {
@@ -157,7 +85,6 @@ To apply: send a short email with your GitHub link and one thing you have shippe
     expectedBin: 'caution',
     note: 'small-startup-vague | YC-batch founding engineer — 2 buzzwords (self-starter, thrive in ambiguity) + salary ($90k-$120k) + stack (TypeScript, Postgres, React) + yoe (2+ years) present; missing: benefits detail, reporting structure, timeline (3 absent fields = spec.ghostiness 0.45). D-32 floor 0.9 prevents drop to suspicious. AI-SPEC §1b: salary partially present, stack named, but vague company for a founding role.',
   },
-
   {
     id: 'seed-startup-eng',
     posting: {
@@ -180,9 +107,6 @@ If this sounds like you, apply at klarro.io/jobs or email jobs@klarro.io.`,
     expectedBin: 'caution',
     note: 'small-startup-vague | seed startup — stack (Python, FastAPI, PostgreSQL, Redis) + location (Remote) present; missing: salary range (commensurate = absent), yoe (no explicit years), benefits (none yet), reporting, team size, timeline (4 absent fields = spec.ghostiness 0.60). No buzzwords or scam. D-32 floor 0.9 prevents drop to suspicious. AI-SPEC §1b: human-voiced pre-PMF startup, multiple specificity fields absent by design.',
   },
-
-  // --- intl-v1-blindspot (>=2 required) ---
-
   {
     id: 'india-bangalore-swe',
     posting: {
@@ -212,7 +136,6 @@ Apply: razorpay.com/jobs`,
     expectedBin: 'legitimate',
     note: 'intl-v1-blindspot | Bangalore SWE — no explicit salary range per India market norm (CONTEXT D-34 deferred; salary disclosure not legally required outside US/EU). All other specificity fields present: stack, yoe, location, benefits, reporting, team, timeline. AI-SPEC §1b: geographic-disclosure alignment is a v1 blind spot. Engine should not penalize heavily.',
   },
-
   {
     id: 'london-fintech',
     posting: {
@@ -238,9 +161,6 @@ Apply at thoughtmachine.net/careers.`,
     expectedBin: 'legitimate',
     note: 'intl-v1-blindspot | London fintech — EU pay transparency context (Directive 2023/970 transposition by June 2026). Salary in GBP disclosed. All 8 specificity fields present: salary, stack, yoe, location, benefits, reporting, team, timeline. AI-SPEC §1b: regulatory tech posting; legitimate EU-style disclosure.',
   },
-
-  // --- generic-real (4 required) ---
-
   {
     id: 'midmarket-senior-fe',
     posting: {
@@ -270,7 +190,6 @@ Apply at rippling.com/jobs.`,
     expectedBin: 'legitimate',
     note: 'generic-real | mid-market senior frontend — salary + stack + team + reporting + benefits + yoe + location + timeline all present. AI-SPEC §1b: salary specificity, tech stack, named team, reporting structure all disclosed.',
   },
-
   {
     id: 'midmarket-backend',
     posting: {
@@ -300,7 +219,6 @@ Applications: brex.com/careers`,
     expectedBin: 'legitimate',
     note: 'generic-real | Brex backend — all 8 specificity fields present. AI-SPEC §1b: concrete tech stack, salary range, named team and reporting.',
   },
-
   {
     id: 'midmarket-platform',
     posting: {
@@ -330,7 +248,6 @@ Apply: gusto.com/jobs`,
     expectedBin: 'legitimate',
     note: 'generic-real | Gusto SRE — salary disclosed (CO Equal Pay for Equal Work Act applies), all 8 fields present. AI-SPEC §1b: pay-transparency law compliance, named reporting chain, concrete on-call cadence.',
   },
-
   {
     id: 'midmarket-data-eng',
     posting: {
@@ -360,13 +277,6 @@ Apply at faire.com/careers`,
     expectedBin: 'legitimate',
     note: 'generic-real | Faire data engineering — all 8 fields present, concrete stack (Python, dbt, Airflow, Snowflake, Kafka), salary disclosed per MA pay transparency, team and reporting named. AI-SPEC §1b: stack specificity + salary + team + timeline.',
   },
-
-  // =========================================================================
-  // BLOCK 2: KNOWN SUSPICIOUS / GHOST (expectedBin: 'suspicious' or 'ghost')
-  // =========================================================================
-
-  // --- scam-classic (>=3 required) ---
-
   {
     id: 'ghost-whatsapp-urgent',
     posting: {
@@ -391,7 +301,6 @@ To apply: contact our hiring team on WhatsApp at +1-555-987-6543 or email us at 
     expectedBin: 'ghost',
     note: 'scam-classic | WhatsApp + Gmail + urgency + unrealistic comp ($5000/week) — Dim 3 PASS gate. FBI IC3 PSA 2022: messaging-app contact is #1 scam vector; $5k/week is unrealistic for data entry. 5+ buzzwords (rockstar, fast-growing, dynamic, best-in-class, self-starters, thrive in ambiguity, wear many hats, world-class). 7+ specificity fields missing. Scam signals must drive this to ghost band.',
   },
-
   {
     id: 'ghost-telegram-quick-hire',
     posting: {
@@ -414,7 +323,6 @@ Contact: Message us on Telegram @quickhire_jobs or email quickhire2026@yahoo.com
     expectedBin: 'ghost',
     note: 'scam-classic | Telegram + Yahoo email + equipment-purchase check fraud + urgency + unrealistic comp — multiple scam vectors from FTC Consumer Alert Sept 2025 and FBI IC3. 5+ buzzwords (urgent, immediately, industry-leading, world-class, self-starters, top-tier, team players, high-velocity). Equipment purchase check fraud is definitional scam pattern per FTC.',
   },
-
   {
     id: 'ghost-signal-recruiter',
     posting: {
@@ -434,9 +342,6 @@ Contact us IMMEDIATELY on Signal at +1-555-321-7890 or at virtualstaff_hire@hotm
     expectedBin: 'ghost',
     note: 'scam-classic | Signal + Hotmail + equipment-purchase + urgency + unrealistic comp ($800/week, 3h/day) — FBI IC3 2025 employment-scam pattern. 5+ buzzwords (dynamic, rockstar, world-class, top-tier, reputable company). All 8 specificity fields missing (no salary range, stack, yoe, office location, benefits, reporting, team, timeline). Scam signals + high buzzword count + zero specificity drives to ghost band.',
   },
-
-  // --- ai-slop (>=3 required) ---
-
   {
     id: 'ai-slop-generic-1',
     posting: {
@@ -464,7 +369,6 @@ We offer a great work culture and the chance to make an impact. Apply today to j
     expectedBin: 'suspicious',
     note: 'ai-slop | template-y prose — 3 buzzwords (fast-paced, self-starter, world-class; "thrives in ambiguity" does not match \bthrive in ambiguity\b) + stack (JavaScript, React) + team (team meetings) present; 6 fields missing (salary, yoe, location, benefits, reporting, timeline). spec.ghostiness=0.80; score approx 26. No scam. AI-SPEC §1b: buzzword saturation + missing specificity = suspicious but not ghost.',
   },
-
   {
     id: 'ai-slop-generic-2',
     posting: {
@@ -492,7 +396,6 @@ What We Offer: amazing culture, opportunities for growth, and the chance to be p
     expectedBin: 'suspicious',
     note: 'ai-slop | 4 buzzwords (rockstar, fast-paced, world-class, thrive in ambiguity) + location (remote) + stack (SQL) + team (remote team) present; 5 fields missing (salary, yoe, benefits, reporting, timeline). spec.ghostiness=0.75; score approx 24. No scam. AI-SPEC §1b: LLM-shape phrasing but not enough scam signals for ghost.',
   },
-
   {
     id: 'ai-slop-generic-3',
     posting: {
@@ -522,9 +425,6 @@ Apply now and become part of our story!`,
     expectedBin: 'suspicious',
     note: 'ai-slop | 4 buzzwords (world-class, self-starter, thrive in ambiguity, fast-paced) + location (remote) + stack (SQL) + team (sales team) present; 5 fields missing (salary, yoe, benefits, reporting, timeline). spec.ghostiness=0.75; score approx 24. No scam. AI-SPEC §1b: AI-detection unreliability caveat — buzzword saturation without scam signals stays in suspicious band.',
   },
-
-  // --- borderline (>=2 required) ---
-
   {
     id: 'borderline-vague-1',
     posting: {
@@ -544,7 +444,6 @@ Compensation: not publicly listed; discussed at offer stage and based on experie
     expectedBin: 'caution',
     note: 'borderline | vague but no scam — no salary range (missing), team size mentioned (6), stack named (React, Node.js, PostgreSQL). Missing: salary, benefits detail, reporting, timeline. 1 buzzword or fewer. Caution expected: specific enough to not be suspicious, but missing enough fields for legitimate. Tests AI-slop-vs-scam distinction (no scam signals means this stays in caution not ghost).',
   },
-
   {
     id: 'borderline-vague-2',
     posting: {
@@ -564,9 +463,6 @@ If this sounds interesting, send us an email at jobs@meridiananalytics.com with 
     expectedBin: 'caution',
     note: 'borderline | intentionally vague on salary ("commensurate") + no exact yoe + no timeline + no reporting. Tech stack present (Python, FastAPI, React, PostgreSQL, Snowflake). Company email domain used (legitimate signal per FTC). No buzzwords or scam signals. Tests absence-of-salary caution without ghost.',
   },
-
-  // --- scam-equipment ---
-
   {
     id: 'scam-equipment-purchase',
     posting: {
@@ -588,9 +484,6 @@ To apply: email adminstaff_careers@gmail.com or message us at hirefast_admin on 
     expectedBin: 'ghost',
     note: 'scam-equipment | buy-equipment-from-our-vendor pattern — definitional FTC employment-scam shape. "Refundable deposit check" + "buy equipment" + "wire transfer" are the check-fraud triad per FTC "Taking the ploy out of employment scams" (2023). Also: messaging-app contact (Telegram) + Gmail + urgency + unrealistic comp ($1500/week part-time) + 5+ buzzwords (world-class, industry-leading, top-tier, competitive comp, self-starter, thrive in ambiguity, wear many hats, dynamic, fast-paced).',
   },
-
-  // --- scam-crypto ---
-
   {
     id: 'scam-crypto-job',
     posting: {

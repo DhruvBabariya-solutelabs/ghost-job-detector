@@ -1,9 +1,3 @@
-/**
- * "Ghosts dodged" lifetime counter — a small engagement chip showing how many
- * suspicious/ghost listings the user has been warned about. Pops a brief
- * sparkle celebration when the count lands on a milestone (5/10/25/50/100…).
- */
-
 import { useEffect, useRef, useState } from 'react';
 import { GhostIcon } from './icons';
 import { useReducedMotion } from './useReducedMotion';

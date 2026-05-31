@@ -1,32 +1,9 @@
-/**
- * ReasonsList — "Why this score" tiles (dark premium glass, 2026 refit).
- *
- * Each reason is a glass tile with:
- *   - a leading direction chip (trend-up green for in-its-favour, trend-down
- *     band-coloured for risk) that anchors the card with a soft accent glow,
- *   - a gradient hairline border (accent → neutral) for a premium edge,
- *   - the reason text + a dotted intensity pill (Strong / Notable / Mild),
- *   - the signal name + a glowing gradient impact meter sized by |signed| vs the
- *     strongest reason (staggered scaleX fill),
- *   - an optional evidence citation (clamped to 2 lines).
- * Status is conveyed by text AND colour (a11y), never colour alone. Rows
- * hover-lift and stagger-reveal (55ms apart). All motion is transform/opacity
- * and disabled under reduced-motion by overlay.css.
- *
- * Magnitude thresholds (match label.ts rounding):
- *   |signed| ≥ 16 → Strong · ≥ 8 → Notable · else → Mild
- *
- * Edge cases (UI-SPEC 573-574): >5 reasons → first 5; 0 → inline note.
- * Quote characters: U+201C / U+201D (typographic).
- */
-
 import type { Reason, RiskBand } from '@ghost/shared';
 import { RISK_COLORS } from '@ghost/shared';
 import { SIGNAL_LABELS } from './labels.js';
 
 export interface ReasonsListProps {
   reasons: Reason[];
-  /** Drives the negative-direction tint so reasons stay keyed to the verdict. */
   band: RiskBand;
 }
 
@@ -36,7 +13,6 @@ function intensityLabel(absSigned: number): 'Mild' | 'Notable' | 'Strong' {
   return 'Mild';
 }
 
-/** Trend arrow — up-right for a score-raising signal, down-right for risk. */
 function TrendArrow({ up, color }: { up: boolean; color: string }) {
   return (
     <svg
@@ -82,14 +58,12 @@ export function ReasonsList({ reasons, band }: ReasonsListProps) {
           const positive = reason.signed >= 0;
           const intensity = intensityLabel(Math.abs(reason.signed));
           const accent = positive ? POSITIVE_ACCENT : negativeAccent;
-          // Bright accent text reads on the dark glass.
           const brightText = `color-mix(in oklch, ${accent} 74%, white)`;
           const accentTop = `color-mix(in oklch, ${accent} 58%, white)`;
           const pct = Math.max(6, Math.round((Math.abs(reason.signed) / maxAbs) * 100));
           const key = `${reason.signalKey}-${index}`;
           const quoted = reason.evidenceQuote ? `“${reason.evidenceQuote}”` : '';
 
-          // Gradient hairline border (accent → neutral) over the glass surface.
           const cardBackground = `linear-gradient(var(--ov-surface), var(--ov-surface)) padding-box, linear-gradient(150deg, color-mix(in oklch, ${accent} 50%, transparent), var(--ov-border) 60%) border-box`;
 
           const chipStyle = {
@@ -110,7 +84,6 @@ export function ReasonsList({ reasons, band }: ReasonsListProps) {
               }}
             >
               <div className="flex items-start gap-2.5">
-                {/* Direction chip — visual anchor with soft accent glow. */}
                 <span
                   aria-hidden="true"
                   className="grid place-items-center w-8 h-8 shrink-0 rounded-[9px]"
@@ -139,7 +112,6 @@ export function ReasonsList({ reasons, band }: ReasonsListProps) {
                     </span>
                   </div>
 
-                  {/* Signal name + glowing impact meter */}
                   <div className="mt-2.5 flex items-center gap-2">
                     <span className="text-[10px] font-medium text-(--ov-ink-muted) whitespace-nowrap">
                       {SIGNAL_LABELS[reason.signalKey]}

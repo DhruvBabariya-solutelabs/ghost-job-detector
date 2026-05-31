@@ -1,26 +1,15 @@
 'use client';
 
-/**
- * Dashboard — client orchestrator for /dashboard (WEB-07 + WEB-10 + WEB-11).
- *
- * Dark Linear-inspired list of recently scored postings. Rows stagger-fade
- * in via framer-motion, hover lifts a row + adds a brand-glow seam, click
- * opens the read-only modal.
- *
- * Five branches (loading / corrupted / unavailable / empty / populated) all
- * preserve the original gateway calls and state machine — only visuals change.
- */
-
-import Link from 'next/link';
-import { useCallback, useEffect, useState } from 'react';
-import { motion, useReducedMotion, type Variants } from 'framer-motion';
-import { ArrowRight, ChevronRight, AlertTriangle, FileSearch } from 'lucide-react';
-import type { HistoryEntry } from '@/lib/storage';
-import { clearHistory, getHistory, removeHistoryById } from '@/lib/storage';
-import { relativeTime } from '@/lib/relativeTime';
 import type { RiskBand } from '@ghost/shared';
 import { RISK_COLORS } from '@ghost/shared';
+import { motion, useReducedMotion, type Variants } from 'framer-motion';
+import { AlertTriangle, ArrowRight, ChevronRight, FileSearch } from 'lucide-react';
+import Link from 'next/link';
+import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { relativeTime } from '@/lib/relativeTime';
+import type { HistoryEntry } from '@/lib/storage';
+import { clearHistory, getHistory, removeHistoryById } from '@/lib/storage';
 import { DashboardModal } from './DashboardModal';
 
 type LoadState =
@@ -88,12 +77,9 @@ export function Dashboard() {
   }, []);
 
   const openEntry =
-    loadState.kind === 'ok'
-      ? (loadState.entries.find((e) => e.id === openEntryId) ?? null)
-      : null;
+    loadState.kind === 'ok' ? (loadState.entries.find((e) => e.id === openEntryId) ?? null) : null;
 
-  const entriesCount =
-    loadState.kind === 'ok' ? loadState.entries.length : 0;
+  const entriesCount = loadState.kind === 'ok' ? loadState.entries.length : 0;
 
   const headlineText =
     loadState.kind === 'loading'
@@ -180,8 +166,7 @@ export function Dashboard() {
       {loadState.kind === 'unavailable' && (
         <div className="py-6 max-w-md">
           <p className="text-base text-[--color-ink-muted] leading-[1.55]">
-            Local storage isn't available in this browser, so saved analyses
-            can't be loaded here.
+            Local storage isn't available in this browser, so saved analyses can't be loaded here.
           </p>
         </div>
       )}
@@ -197,8 +182,8 @@ export function Dashboard() {
             <FileSearch className="h-6 w-6" strokeWidth={1.5} />
           </div>
           <p className="text-lg text-[--color-ink] leading-[1.55]">
-            When you score a posting, it lands here. Up to 50 stay saved; the
-            oldest drops off first.
+            When you score a posting, it lands here. Up to 50 stay saved; the oldest drops off
+            first.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center">
             <Button asChild variant="default" size="default">
@@ -242,7 +227,6 @@ export function Dashboard() {
                   aria-label={`${entry.posting.title || 'Untitled posting'} — ${SHORT_LABEL[risk]} (score ${score})`}
                   className="group relative w-full text-left grid grid-cols-[5rem_1fr_auto] grid-rows-[auto_auto] md:grid-cols-[6.5rem_1fr_9rem_2rem] md:grid-rows-1 items-start md:items-center gap-x-4 gap-y-2 md:gap-x-6 md:gap-y-0 py-5 md:py-6 px-3 -mx-3 border-t border-[--color-border] hover:bg-[--color-surface-subtle]/60 transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] focus:outline-none focus-visible:ring-[3px] focus-visible:ring-[--color-border-focus]/40 rounded-lg"
                 >
-                  {/* Score column */}
                   <div className="row-span-2 md:row-span-1 flex items-baseline gap-1 self-center">
                     <span
                       className="font-mono tabular-nums text-4xl md:text-5xl font-semibold leading-none transition-[text-shadow] duration-300"
@@ -258,7 +242,6 @@ export function Dashboard() {
                     </span>
                   </div>
 
-                  {/* Title block */}
                   <div className="min-w-0">
                     <p className="text-base md:text-lg font-semibold text-[--color-ink] truncate group-hover:text-[--color-brand] transition-colors duration-200 tracking-tight">
                       {entry.posting.title || 'Untitled posting'}
@@ -270,7 +253,6 @@ export function Dashboard() {
                     </p>
                   </div>
 
-                  {/* Meta block */}
                   <div className="flex flex-row md:flex-col md:items-end gap-2 md:gap-1.5">
                     <span
                       className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap"
@@ -292,7 +274,6 @@ export function Dashboard() {
                     </span>
                   </div>
 
-                  {/* Chevron — appears on hover */}
                   <ChevronRight
                     className="hidden md:block h-4 w-4 text-[--color-ink-subtle] opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200"
                     aria-hidden="true"

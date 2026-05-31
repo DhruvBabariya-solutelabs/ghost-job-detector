@@ -1,18 +1,11 @@
-/**
- * Sample band picker — one chip per risk band. Loads the matching demo fixture
- * (zero-network) and triggers the full hero reveal. Each chip is tinted in its
- * verdict accent and pairs the colour with the verdict word + icon.
- */
-
-import { RISK_BANDS } from '@ghost/shared';
 import type { RiskBand } from '@ghost/shared';
-import { VERDICTS } from './verdict';
+import { RISK_BANDS } from '@ghost/shared';
 import { VerdictIcon } from './icons';
+import { VERDICTS } from './verdict';
 
 interface SampleChipsProps {
   onPick: (band: RiskBand) => void;
   disabled?: boolean;
-  /** 2 columns (popup) or 4-in-a-row (side-panel). */
   columns?: number;
 }
 

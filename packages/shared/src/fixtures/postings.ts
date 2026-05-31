@@ -1,53 +1,15 @@
-/**
- * DEMO-05 fixtures — transferred to Phase 4 ownership per CONTEXT.md D-53.
- *
- * PURPOSE: Pre-baked 4-band demo set for the extension popup's "Demo: Load Sample"
- * band picker (Plan 04-08) and the service worker LOAD_DEMO handler (Plan 04-05).
- * This is the ZERO-NETWORK safety net for EXT-15 — every fixture carries a fully
- * hydrated AnalyzeResponse so no engine call, no API call, and no OpenAI key is
- * needed to render any of the four overlay states during a live demo.
- *
- * DISTINCT FROM Phase-3 calibration set:
- * - packages/scoring/src/fixtures/postings.ts — 20 hand-binned regression-gate
- *   postings for the scoring engine (internal, never user-facing, D-54).
- * - THIS FILE — 4 hand-tuned "wow" postings curated for the demo storyboard,
- *   exported from @ghost/shared for cross-app reuse (extension + Phase 5 web app).
- *
- * All responses carry meta.usedAi: false and meta.model: 'demo-fixture' per
- * D-55 — clearly marking them as synthetic so history viewers can distinguish
- * demo entries from real analyses.
- *
- * @module fixtures/postings
- */
-
-import type { JobPosting, AnalyzeResponse } from '../contracts.js';
+import type { AnalyzeResponse, JobPosting } from '../contracts.js';
 import type { RiskBand } from '../risk.js';
 
-// ---------------------------------------------------------------------------
-// DemoFixture interface (CONTEXT D-53 locked shape)
-// ---------------------------------------------------------------------------
-
 export interface DemoFixture {
-  /** Kebab-case unique identifier — no emoji. */
   id: string;
-  /** One per RiskBand — 4 fixtures total. */
   band: RiskBand;
-  /** Human-facing chip label for the popup band picker. */
   label: string;
-  /** The JobPosting that "would have been extracted" from the job page. */
   posting: JobPosting;
-  /** Pre-baked AnalyzeResponse — hand-tuned to match the band. Zero engine calls. */
   response: AnalyzeResponse;
 }
 
-// ---------------------------------------------------------------------------
-// DEMO_FIXTURES — EXACTLY 4 entries, one per RiskBand
-// ---------------------------------------------------------------------------
-
 export const DEMO_FIXTURES: DemoFixture[] = [
-  // =========================================================================
-  // FIXTURE 1 — Legitimate (score: 80..100)
-  // =========================================================================
   {
     id: 'demo-legit-stripe',
     band: 'legitimate',
@@ -83,7 +45,8 @@ Benefits:
 - Flexible PTO + 12 company holidays
 
 We are committed to building a team as diverse as the people we serve. Stripe is an equal-opportunity employer.`,
-      sourceUrl: 'https://stripe.com/jobs/listing/staff-software-engineer-payments-infrastructure/123456',
+      sourceUrl:
+        'https://stripe.com/jobs/listing/staff-software-engineer-payments-infrastructure/123456',
     },
     response: {
       score: 87,
@@ -104,7 +67,8 @@ We are committed to building a team as diverse as the people we serve. Stripe is
         {
           text: 'Team and reporting line clearly named',
           signed: 5,
-          evidenceQuote: 'Payments Infrastructure team … reports to the Director of Payments Engineering',
+          evidenceQuote:
+            'Payments Infrastructure team … reports to the Director of Payments Engineering',
           signalKey: 'specificity',
         },
         {
@@ -122,9 +86,6 @@ We are committed to building a team as diverse as the people we serve. Stripe is
     },
   },
 
-  // =========================================================================
-  // FIXTURE 2 — Caution (score: 50..79)
-  // =========================================================================
   {
     id: 'demo-caution-bigco',
     band: 'caution',
@@ -196,9 +157,6 @@ Benefits:
     },
   },
 
-  // =========================================================================
-  // FIXTURE 3 — Suspicious (score: 20..49)
-  // =========================================================================
   {
     id: 'demo-suspicious-vague',
     band: 'suspicious',
@@ -268,9 +226,6 @@ We are growing fast and looking for rock stars who can hit the ground running an
     },
   },
 
-  // =========================================================================
-  // FIXTURE 4 — Likely Ghost Job (score: 0..19)
-  // =========================================================================
   {
     id: 'demo-ghost-classic',
     band: 'ghost',
@@ -322,7 +277,7 @@ Interested? DM us on Telegram @stealthhiring or send a WhatsApp message to our h
         {
           text: 'Urgent hiring pressure detected',
           signed: -12,
-          evidenceQuote: '… apply TODAY … immediate start … won\'t last …',
+          evidenceQuote: "… apply TODAY … immediate start … won't last …",
           signalKey: 'scam',
         },
         {

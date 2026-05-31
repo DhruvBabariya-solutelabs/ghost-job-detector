@@ -1,16 +1,5 @@
-/**
- * Popup stylesheet — premium redesign.
- *
- * The popup is a full chrome-extension:// page with no host CSS to collide
- * with, so it gets the dedicated UI design system (Inter, violet brand, dark
- * canvas, glassmorphism, motion) rather than the shared overlay tokens. The
- * in-page Shadow-DOM overlay deliberately keeps the system-font shared theme.
- */
-
 @import "../../src/ui/theme.css";
 
-/* Fixed popup width is owned by <main> (380px). The body just supplies the
-   canvas background so there's no flash before React mounts. */
 html,
 body {
   width: 380px;

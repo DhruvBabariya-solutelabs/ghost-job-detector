@@ -1,14 +1,3 @@
-/**
- * InstallCTA (landing) — closing CTA block before the footer.
- *
- * UI-SPEC §"Landing page — Install CTA section" lines 258-266 + §Copywriting
- * lines 260-264 (verbatim).
- *
- * Layout deviates from UI-SPEC centered-stack: editorial poster — eyebrow,
- * oversize headline, sub, dark CTA, all left-aligned. The closing block reads
- * as a final punch instead of a generic "centered hero-lite".
- */
-
 import Link from 'next/link';
 
 export function InstallCTA() {

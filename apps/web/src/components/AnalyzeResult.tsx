@@ -1,37 +1,14 @@
 'use client';
 
-/**
- * AnalyzeResult — right-column result panel for /analyze.
- *
- * Dark Linear-inspired panel with framer-motion AnimatePresence on the state
- * machine. Container shape is constant across states so the right column
- * doesn't jump on transition. All four states render the same outer card.
- *
- * Hook ordering rule preserved: useId + useState at the top of the component,
- * stable across renders, render branches by state.kind.
- */
-
-import { useId, useState } from 'react';
-import {
-  AnimatePresence,
-  motion,
-  useReducedMotion,
-  type Variants,
-} from 'framer-motion';
-import {
-  AlertTriangle,
-  ArrowRight,
-  BookOpen,
-  Check,
-  Loader2,
-  RefreshCw,
-} from 'lucide-react';
 import type { AnalyzeResponse, JobPosting, RiskBand } from '@ghost/shared';
 import { RISK_BANDS } from '@ghost/shared';
+import { AnimatePresence, motion, useReducedMotion, type Variants } from 'framer-motion';
+import { AlertTriangle, ArrowRight, BookOpen, Check, Loader2, RefreshCw } from 'lucide-react';
+import { useId, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ScoreDial } from './ScoreDial';
-import { RiskLabel } from './RiskLabel';
 import { ReasonsList } from './ReasonsList';
+import { RiskLabel } from './RiskLabel';
+import { ScoreDial } from './ScoreDial';
 import { SignalBreakdownDrawer } from './SignalBreakdownDrawer';
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -77,7 +54,6 @@ export function AnalyzeResult({
 
   return (
     <div className="relative">
-      {/* Outer glow */}
       <div
         aria-hidden="true"
         className="absolute -inset-2 rounded-2xl bg-gradient-to-b from-[--color-brand-glow]/10 to-transparent blur-2xl pointer-events-none"
@@ -100,8 +76,7 @@ export function AnalyzeResult({
                 <BookOpen className="h-7 w-7" strokeWidth={1.5} />
               </div>
               <p className="text-sm text-[--color-ink-muted] max-w-[300px] leading-[1.55]">
-                Your trust score and signal breakdown will appear here once
-                you analyze a posting.
+                Your trust score and signal breakdown will appear here once you analyze a posting.
               </p>
             </motion.div>
           )}
@@ -136,9 +111,18 @@ export function AnalyzeResult({
                 </span>
               </p>
               <div className="w-full space-y-2 mt-2" aria-hidden="true">
-                <div className="h-3 bg-[--color-surface-subtle] rounded-sm animate-pulse" style={{ width: '100%' }} />
-                <div className="h-3 bg-[--color-surface-subtle] rounded-sm animate-pulse" style={{ width: '80%' }} />
-                <div className="h-3 bg-[--color-surface-subtle] rounded-sm animate-pulse" style={{ width: '60%' }} />
+                <div
+                  className="h-3 bg-[--color-surface-subtle] rounded-sm animate-pulse"
+                  style={{ width: '100%' }}
+                />
+                <div
+                  className="h-3 bg-[--color-surface-subtle] rounded-sm animate-pulse"
+                  style={{ width: '80%' }}
+                />
+                <div
+                  className="h-3 bg-[--color-surface-subtle] rounded-sm animate-pulse"
+                  style={{ width: '60%' }}
+                />
               </div>
               <span className="sr-only" aria-live="polite">
                 Analyzing your job posting…
@@ -172,9 +156,7 @@ export function AnalyzeResult({
                 drawerId={drawerId}
               />
               <RiskLabel band={state.response.risk} />
-              <p className="text-sm text-[--color-ink-muted]">
-                {labelFor(state.response.risk)}
-              </p>
+              <p className="text-sm text-[--color-ink-muted]">{labelFor(state.response.risk)}</p>
               <span className="sr-only" aria-live="polite">
                 Trust score: {state.response.score} out of 100. Verdict:{' '}
                 {labelFor(state.response.risk)}.
@@ -208,8 +190,7 @@ export function AnalyzeResult({
             </motion.div>
           )}
 
-          {(state.kind === 'error_network' ||
-            state.kind === 'error_unknown') && (
+          {(state.kind === 'error_network' || state.kind === 'error_unknown') && (
             <motion.div
               key="error"
               variants={panelVariants}

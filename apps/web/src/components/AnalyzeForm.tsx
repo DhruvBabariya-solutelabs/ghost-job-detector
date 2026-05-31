@@ -1,32 +1,19 @@
 'use client';
 
-/**
- * AnalyzeForm — client-side orchestrator for /analyze.
- *
- * Plan 05-06 / UI-SPEC §"`/analyze` page" — state machine preserved verbatim
- * (idle → loading → success | error_unknown, resettable). Visual surface
- * upgraded to dark Linear-inspired with shadcn Textarea/Button + framer-motion
- * animated header. The save idempotency window, 50KB cap, and minimum-20-char
- * gate from UI-SPEC line 1059-1063 are unchanged.
- */
-
-import { useState } from 'react';
+import type { AnalyzeRequest } from '@ghost/shared';
 import { motion, useReducedMotion, type Variants } from 'framer-motion';
 import { ArrowRight, Loader2, Sparkles } from 'lucide-react';
-import type { AnalyzeRequest } from '@ghost/shared';
-import { analyzeApi } from '@/lib/analyzeApi';
-import { pushHistory } from '@/lib/storage';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { analyzeApi } from '@/lib/analyzeApi';
+import { pushHistory } from '@/lib/storage';
 import { AnalyzeResult, type AnalyzeResultState } from './AnalyzeResult';
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
-type SaveState =
-  | { kind: 'idle' }
-  | { kind: 'saved' }
-  | { kind: 'duplicate' };
+type SaveState = { kind: 'idle' } | { kind: 'saved' } | { kind: 'duplicate' };
 
 const headerVariants: Variants = {
   hidden: {},
@@ -47,15 +34,12 @@ export function AnalyzeForm() {
     kind: 'idle',
   });
   const [saveState, setSaveState] = useState<SaveState>({ kind: 'idle' });
-  const [lastSavedHash, setLastSavedHash] = useState<
-    { hash: string; ts: number } | null
-  >(null);
+  const [lastSavedHash, setLastSavedHash] = useState<{ hash: string; ts: number } | null>(null);
 
   const trimmed = description.trim();
   const isTooShort = trimmed.length < 20;
   const isTooLong = description.length > 50_000;
-  const submitDisabled =
-    isTooShort || isTooLong || resultState.kind === 'loading';
+  const submitDisabled = isTooShort || isTooLong || resultState.kind === 'loading';
 
   const handleSubmit = async (): Promise<void> => {
     if (isTooShort) {
@@ -84,11 +68,7 @@ export function AnalyzeForm() {
     const { posting, response } = resultState;
     const hash = `${response.score}-${response.risk}-${posting.title.slice(0, 30)}`;
     const now = Date.now();
-    if (
-      lastSavedHash !== null &&
-      lastSavedHash.hash === hash &&
-      now - lastSavedHash.ts < 5000
-    ) {
+    if (lastSavedHash !== null && lastSavedHash.hash === hash && now - lastSavedHash.ts < 5000) {
       setSaveState({ kind: 'duplicate' });
       setTimeout(() => setSaveState({ kind: 'idle' }), 3000);
       return;
@@ -138,8 +118,8 @@ export function AnalyzeForm() {
           variants={fadeUp}
           className="text-base md:text-lg text-[--color-ink-muted] leading-[1.5]"
         >
-          Paste a job posting below. We'll score it the same way the extension
-          does, same engine, same signals.
+          Paste a job posting below. We'll score it the same way the extension does, same engine,
+          same signals.
         </motion.p>
       </motion.header>
 
@@ -169,9 +149,7 @@ export function AnalyzeForm() {
             placeholder="Paste the full posting — title, company, location, and the description. The more we get, the better we can score."
             className="min-h-[340px]"
             aria-describedby="gjd-analyze-helper"
-            aria-invalid={
-              isTooShort && description.length > 0 ? true : undefined
-            }
+            aria-invalid={isTooShort && description.length > 0 ? true : undefined}
           />
 
           {isTooShort && description.length > 0 ? (
@@ -180,8 +158,8 @@ export function AnalyzeForm() {
               className="text-xs leading-[1.5]"
               style={{ color: 'var(--color-risk-ghost-fg)' }}
             >
-              That doesn't look like a full job description. Paste at least 20
-              characters and try again.
+              That doesn't look like a full job description. Paste at least 20 characters and try
+              again.
             </p>
           ) : isTooLong ? (
             <p
@@ -189,17 +167,13 @@ export function AnalyzeForm() {
               className="text-xs leading-[1.5]"
               style={{ color: 'var(--color-risk-ghost-fg)' }}
             >
-              That posting is unusually long (max 50,000 characters). Trim it
-              and try again.
+              That posting is unusually long (max 50,000 characters). Trim it and try again.
             </p>
           ) : (
-            <p
-              id="gjd-analyze-helper"
-              className="text-xs text-[--color-ink-muted] leading-[1.55]"
-            >
+            <p id="gjd-analyze-helper" className="text-xs text-[--color-ink-muted] leading-[1.55]">
               Minimum 20 characters of description. Your posting is sent to
-              ghost-job-detector.vercel.app for analysis. Your OpenAI key (if
-              set in Settings) is sent in a header and never logged.
+              ghost-job-detector.vercel.app for analysis. Your OpenAI key (if set in Settings) is
+              sent in a header and never logged.
             </p>
           )}
 

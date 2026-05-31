@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
 import type { RiskBand } from '@ghost/shared';
+import { useCallback, useEffect, useState } from 'react';
 import type { HistoryEntry, RpcResponse } from '@/src/lib/messages';
 import { getGhostsDodged, getOnboarded, setOnboarded } from '@/src/lib/storage';
 
@@ -10,11 +10,9 @@ export type UiStatus = 'onboarding' | 'empty' | 'loading' | 'result' | 'error';
 export interface GhostUi {
   status: UiStatus;
   history: HistoryEntry[];
-  /** The entry currently shown in the hero (most-recent or user-selected). */
   selected: HistoryEntry | null;
   ghostsDodged: number;
   online: boolean;
-  /** True for the single render right after a reveal — drives the count-up. */
   justRevealed: boolean;
   loadDemo: (band: RiskBand) => Promise<void>;
   retry: () => Promise<void>;
@@ -46,7 +44,6 @@ export function useGhostUi(): GhostUi {
     return [] as HistoryEntry[];
   }, []);
 
-  // Boot: decide onboarding vs result vs empty.
   useEffect(() => {
     void (async () => {
       const [onboarded, hist] = await Promise.all([getOnboarded(), refresh()]);
@@ -63,7 +60,6 @@ export function useGhostUi(): GhostUi {
     })();
   }, [refresh]);
 
-  // Online/offline.
   useEffect(() => {
     const up = (): void => setOnline(true);
     const down = (): void => setOnline(false);
@@ -80,8 +76,6 @@ export function useGhostUi(): GhostUi {
       setLastBand(band);
       setJustRevealed(false);
       setStatus('loading');
-      // LOAD_DEMO is a zero-network path (works offline); the brief radar-sweep
-      // loading state needs a beat to read as a real "scan", so hold ~700ms.
       const [res] = await Promise.all([
         send({ type: 'LOAD_DEMO', band }),
         new Promise((r) => setTimeout(r, 720)),

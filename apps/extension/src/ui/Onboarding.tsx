@@ -1,17 +1,7 @@
-/**
- * 3-step onboarding — hello → how it works → "Scan this page" CTA that triggers
- * the hero reveal. Swipeable (pointer drag) with dot indicators, Back/Next, and
- * full keyboard support (← →). The final CTA calls onFinish, which the surface
- * turns into a live sample reveal so onboarding ends on the wow moment.
- *
- * Motion: a single translateX track (transform only). Drag follows the finger;
- * release snaps past a threshold. Reduced-motion disables the slide transition.
- */
-
 import { useEffect, useRef, useState } from 'react';
-import { GhostMascot } from './GhostMascot';
 import { Brand } from './Brand';
-import { ShieldCheckIcon, AlertTriangleIcon, FlagIcon, ArrowRightIcon, ScanIcon } from './icons';
+import { GhostMascot } from './GhostMascot';
+import { AlertTriangleIcon, ArrowRightIcon, FlagIcon, ScanIcon, ShieldCheckIcon } from './icons';
 import { useReducedMotion } from './useReducedMotion';
 
 interface OnboardingProps {
@@ -22,7 +12,6 @@ interface OnboardingProps {
 const STEPS = 3;
 
 function MiniArc() {
-  // A static 270° arc preview of the gauge, violet, for the "how it works" step.
   return (
     <svg width={120} height={120} viewBox="0 0 120 120" aria-hidden="true" focusable="false">
       <path
@@ -69,9 +58,6 @@ export function Onboarding({ onFinish, onSkip }: OnboardingProps) {
 
   const go = (next: number): void => setStep(Math.max(0, Math.min(STEPS - 1, next)));
 
-  // Pointer-drag (progressive enhancement) + arrow-key nav are wired as native
-  // listeners rather than JSX handlers so the viewport stays a plain,
-  // non-interactive element (Back/Next + dots are the accessible controls).
   useEffect(() => {
     const el = viewportRef.current;
     if (!el) return;
@@ -156,8 +142,6 @@ export function Onboarding({ onFinish, onSkip }: OnboardingProps) {
         </button>
       </div>
 
-      {/* Swipe viewport. Drag is a progressive enhancement (native listeners);
-          Back/Next, the dots, and ← → arrow keys are the accessible path. */}
       <div
         ref={viewportRef}
         style={{ flex: 1, overflow: 'hidden', marginTop: 8, touchAction: 'pan-y' }}
@@ -186,7 +170,9 @@ export function Onboarding({ onFinish, onSkip }: OnboardingProps) {
                 padding: '8px 4px',
               }}
             >
-              <div style={{ height: 116, display: 'grid', placeItems: 'center', overflow: 'visible' }}>
+              <div
+                style={{ height: 116, display: 'grid', placeItems: 'center', overflow: 'visible' }}
+              >
                 {s.art}
               </div>
               <div style={{ maxWidth: 300 }}>
@@ -216,7 +202,6 @@ export function Onboarding({ onFinish, onSkip }: OnboardingProps) {
         </div>
       </div>
 
-      {/* Dots */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: 7, padding: '12px 0' }}>
         {slides.map((s, i) => (
           <button
@@ -239,7 +224,6 @@ export function Onboarding({ onFinish, onSkip }: OnboardingProps) {
         ))}
       </div>
 
-      {/* Footer action */}
       {step < STEPS - 1 ? (
         <button
           type="button"

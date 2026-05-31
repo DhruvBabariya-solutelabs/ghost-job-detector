@@ -1,32 +1,6 @@
-/**
- * ScoreDial (web) — animated SVG dial with WAAPI 700ms reveal.
- *
- * D-70 duplicated v1 from apps/extension/src/content/overlay/ScoreDial.tsx.
- * The extension dial is locked at 128×128; the web app needs BOTH that variant
- * (for /analyze + the /dashboard read-only modal — visually mirrors the extension)
- * AND a 160×160 variant for the landing hero + interactive Demo section. The
- * `size` prop parameterizes the geometry without forking the component (UI-SPEC
- * line 484 + Phase 5 §"Cross-Surface Consistency Summary").
- *
- * Animation contract (UI-SPEC §Motion + D-49 — UNCHANGED from extension):
- *   - 700ms WAAPI animation on strokeDashoffset, EASE_OUT_SOFT easing
- *   - Counter increments driven off anim.currentTime (NOT raw performance.now())
- *   - prefers-reduced-motion: synchronous snap to final state, no animation
- *   - Color locked to RISK_COLORS[risk] from frame 0 (does NOT animate)
- *   - tabular-nums on counter prevents digit-width wobble
- *
- * Geometry derived from `size` at runtime:
- *   - radius = (size - stroke) / 2  → 58 when size=128, 74 when size=160
- *   - circ   = 2 * Math.PI * radius → 364.42 when size=128, 464.96 when size=160
- *   - counterFontSize = 48 when size=160, 36 when size=128 (UI-SPEC line 93)
- *
- * The dial IS the drawer toggle (UI-SPEC line 293) — clicking opens the
- * SignalBreakdownDrawer. Wrapped in a <button> for keyboard accessibility.
- */
-
-import { useEffect, useRef } from 'react';
 import type { RiskBand } from '@ghost/shared';
-import { RISK_COLORS, EASE_OUT_SOFT } from '@ghost/shared';
+import { EASE_OUT_SOFT, RISK_COLORS } from '@ghost/shared';
+import { useEffect, useRef } from 'react';
 
 export interface ScoreDialProps {
   score: number;
@@ -58,15 +32,11 @@ export function ScoreDial({
     const counter = counterRef.current;
     if (circle === null || counter === null) return;
 
-    // Re-derive circ from `size` inside the effect so Biome's exhaustive-deps
-    // analyzer sees `size` as a real dependency (NOT a transitive one) — matches
-    // the plan's "deps array MUST include both [score, size]" contract.
     const localStroke = 12;
     const localRadius = (size - localStroke) / 2;
     const localCirc = 2 * Math.PI * localRadius;
     const finalOffset = localCirc * (1 - score / 100);
 
-    // prefers-reduced-motion: snap to final state synchronously, no animation
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       circle.style.strokeDashoffset = String(finalOffset);
       counter.textContent = String(score);
@@ -75,7 +45,7 @@ export function ScoreDial({
 
     const anim = circle.animate(
       [{ strokeDashoffset: localCirc }, { strokeDashoffset: finalOffset }],
-      { duration: 700, easing: EASE_OUT_SOFT, fill: 'forwards' }
+      { duration: 700, easing: EASE_OUT_SOFT, fill: 'forwards' },
     );
 
     const t0 = performance.now();
@@ -83,10 +53,7 @@ export function ScoreDial({
     const step = (t: number): void => {
       const elapsed = t - t0;
       const p = Math.min(1, elapsed / 700);
-      const eased =
-        anim.currentTime !== null
-          ? Number(anim.currentTime) / 700
-          : 1 - Math.pow(1 - p, 3);
+      const eased = anim.currentTime !== null ? Number(anim.currentTime) / 700 : 1 - (1 - p) ** 3;
       counter.textContent = String(Math.round(score * eased));
       if (p < 1) {
         rafId = requestAnimationFrame(step);

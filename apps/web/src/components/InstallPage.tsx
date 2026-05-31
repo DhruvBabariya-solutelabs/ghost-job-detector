@@ -9,7 +9,7 @@ const STEPS: Step[] = [
   {
     n: 1,
     heading: 'Unzip to a permanent folder',
-    body: "After downloading, extract extension.zip to a folder you won't move or delete — Chrome loads the extension directly from that folder. On Windows: right-click → \"Extract All\". On Mac: double-click the zip.",
+    body: 'After downloading, extract extension.zip to a folder you won\'t move or delete — Chrome loads the extension directly from that folder. On Windows: right-click → "Extract All". On Mac: double-click the zip.',
   },
   {
     n: 2,
@@ -31,15 +31,13 @@ const STEPS: Step[] = [
   {
     n: 5,
     heading: 'Pin the extension to your toolbar',
-    body: 'Click the puzzle-piece icon in Chrome\'s toolbar, find Ghost Job Detector, and click the pin icon. Now it\'s one click away on any LinkedIn or Indeed job page.',
+    body: "Click the puzzle-piece icon in Chrome's toolbar, find Ghost Job Detector, and click the pin icon. Now it's one click away on any LinkedIn or Indeed job page.",
   },
 ];
 
 export function InstallPage() {
   return (
     <div className="max-w-[920px] mx-auto py-10 md:py-16 px-4 md:px-6 lg:px-8">
-
-      {/* Header */}
       <header className="flex flex-col gap-3 mb-10 md:mb-12 max-w-[680px]">
         <p className="text-xs md:text-sm font-mono uppercase tracking-[0.18em] text-[--color-ink-muted]">
           Setup
@@ -48,12 +46,11 @@ export function InstallPage() {
           Install the extension.
         </h1>
         <p className="text-base md:text-lg text-[--color-ink-muted] leading-[1.5]">
-          Download the pre-built zip, load it in Chrome, add your API key.
-          Under two minutes — no Chrome Web Store needed.
+          Download the pre-built zip, load it in Chrome, add your API key. Under two minutes — no
+          Chrome Web Store needed.
         </p>
       </header>
 
-      {/* Download card */}
       <div
         className="mb-12 md:mb-16 p-6 md:p-8 rounded-xl border border-[--color-border] max-w-[720px]"
         style={{ background: 'color-mix(in oklch, var(--color-brand) 6%, var(--color-surface))' }}
@@ -81,25 +78,23 @@ export function InstallPage() {
           </a>
         </div>
 
-        {/* Manual build fallback */}
         <p className="mt-5 pt-5 border-t border-[--color-border] text-xs text-[--color-ink-muted] leading-[1.6]">
-          <span className="font-semibold text-[--color-ink]">Prefer to build from source?</span>
-          {' '}Run{' '}
+          <span className="font-semibold text-[--color-ink]">Prefer to build from source?</span> Run{' '}
           <code className="px-1.5 py-0.5 rounded bg-[--color-surface-subtle] border border-[--color-border] font-mono text-[0.8em]">
             npm run build --workspace=@ghost/extension
-          </code>
-          {' '}then{' '}
+          </code>{' '}
+          then{' '}
           <code className="px-1.5 py-0.5 rounded bg-[--color-surface-subtle] border border-[--color-border] font-mono text-[0.8em]">
             npm run zip --workspace=@ghost/extension
-          </code>
-          {' '}from the repo root. The zip lands in{' '}
+          </code>{' '}
+          from the repo root. The zip lands in{' '}
           <code className="px-1.5 py-0.5 rounded bg-[--color-surface-subtle] border border-[--color-border] font-mono text-[0.8em]">
             apps/extension/.output/
-          </code>.
+          </code>
+          .
         </p>
       </div>
 
-      {/* Steps */}
       <ol className="flex flex-col">
         {STEPS.map((step) => (
           <li
@@ -112,7 +107,8 @@ export function InstallPage() {
                 style={{
                   backgroundColor: 'color-mix(in oklch, var(--color-brand) 18%, transparent)',
                   color: 'var(--color-brand-strong)',
-                  boxShadow: 'inset 0 0 0 1px color-mix(in oklch, var(--color-brand) 40%, transparent)',
+                  boxShadow:
+                    'inset 0 0 0 1px color-mix(in oklch, var(--color-brand) 40%, transparent)',
                 }}
               >
                 {step.n}
@@ -122,19 +118,22 @@ export function InstallPage() {
               <h2 className="text-xl md:text-2xl font-semibold text-[--color-ink] tracking-tight leading-[1.2]">
                 {step.heading}
               </h2>
-              <p className="text-base text-[--color-ink] leading-[1.65]">
-                {step.body}
-              </p>
+              <p className="text-base text-[--color-ink] leading-[1.65]">{step.body}</p>
               {step.code !== undefined && (
                 <div className="inline-flex items-center gap-2 w-fit mt-1">
                   <code
                     className="px-3 py-1.5 rounded-md text-sm font-mono text-[--color-brand] border border-[--color-border]"
-                    style={{ background: 'color-mix(in oklch, var(--color-brand) 8%, var(--color-surface))' }}
+                    style={{
+                      background:
+                        'color-mix(in oklch, var(--color-brand) 8%, var(--color-surface))',
+                    }}
                   >
                     {step.code}
                   </code>
                   {step.n === 2 && (
-                    <span className="text-xs text-[--color-ink-muted]">← paste this in the address bar</span>
+                    <span className="text-xs text-[--color-ink-muted]">
+                      ← paste this in the address bar
+                    </span>
                   )}
                 </div>
               )}
@@ -143,7 +142,6 @@ export function InstallPage() {
         ))}
       </ol>
 
-      {/* Why sideload aside */}
       <aside className="mt-16 md:mt-20 p-6 md:p-8 bg-[--color-surface-subtle] border border-[--color-border] rounded-lg max-w-[720px]">
         <p className="text-xs font-mono uppercase tracking-[0.18em] text-[--color-ink-muted] mb-2">
           Aside
@@ -152,10 +150,9 @@ export function InstallPage() {
           Why sideload?
         </h2>
         <p className="text-base text-[--color-ink] leading-[1.65] mt-3">
-          Chrome Web Store review takes one to three days. We built this in
-          three days. The math doesn't math. Sideloading takes two minutes and
-          works exactly the same — once your key is in the Options page,
-          the overlay is fully functional on LinkedIn and Indeed.
+          Chrome Web Store review takes one to three days. We built this in three days. The math
+          doesn't math. Sideloading takes two minutes and works exactly the same — once your key is
+          in the Options page, the overlay is fully functional on LinkedIn and Indeed.
         </p>
       </aside>
     </div>

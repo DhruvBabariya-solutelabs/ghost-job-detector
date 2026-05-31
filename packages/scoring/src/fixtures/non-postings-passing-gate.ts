@@ -1,77 +1,14 @@
-/**
- * Non-posting fixtures that PASS the D-25 heuristic gate — for AI-SPEC §5
- * Dimension 12 (LLM `is_job_posting` backstop).
- *
- * Unlike `non-postings.ts` (which trip the gate), these fixtures FOOL the
- * heuristic gate: `isLikelyJobPosting()` returns TRUE (description >= 200 chars
- * AND contains a JOB_TERMS keyword). Only the live LLM call (`extractLlmEval`)
- * can catch these — it must return `is_job_posting: false`.
- *
- * Dim 12 is ONLY verifiable in full mode (`OPENAI_API_KEY_EVAL` set).
- * The heuristic-only calibration run skips Dim 12 assertions.
- *
- * When `is_job_posting: false` is returned by the LLM, `extractLlmEval` sets
- * `confidence: 0.5` (Plan 03-03 design). Plan 03-04's `label.ts` then inserts
- * `DOMINANT_NEGATIVE_REASON` as `reasons[0]` (D-25 LLM-backstop path).
- *
- * `expectedLeadingReasonText` is the CANONICAL wording from `DOMINANT_NEGATIVE_REASON`
- * in `packages/scoring/src/label.ts` (BLOCKER 1 single-source-of-truth fix) —
- * byte-for-byte identical to `NON_POSTING_FIXTURES.expectedLeadingReasonText`.
- *
- * @module fixtures/non-postings-passing-gate
- */
-
 import type { JobPosting } from '@ghost/shared';
 
-// ---------------------------------------------------------------------------
-// Interface
-// ---------------------------------------------------------------------------
-
-/**
- * A fixture that passes the D-25 heuristic gate but should fail the LLM backstop.
- *
- * `isLikelyJobPosting(posting)` returns `true` (has JOB_TERMS keyword + length >= 200).
- * The live `extractLlmEval` call must return `is_job_posting: false`.
- * Plan 03-04's `label.ts` inserts `DOMINANT_NEGATIVE_REASON` as `reasons[0]`.
- *
- * Dim 12 requires `OPENAI_API_KEY_EVAL` to be set — heuristic-only runs skip this.
- */
 export interface NonPostingPassingGateFixture {
-  /** Kebab-case unique identifier — no emoji (Pattern H). */
   id: string;
-  /**
-   * A JobPosting whose description passes the heuristic gate (has a JOB_TERMS
-   * keyword + length >= 200) but is NOT an actual job posting.
-   */
   posting: JobPosting;
-  /**
-   * The expected value of `extractLlmEval(posting, ai).is_job_posting`
-   * when the LLM processes this input. Must be false.
-   */
   expectedLlmIsJobPosting: false;
-  /**
-   * Byte-for-byte match of DOMINANT_NEGATIVE_REASON.text from label.ts.
-   * Dim 12 assertion (live-AI mode only): `response.reasons[0].text === expectedLeadingReasonText`.
-   */
   expectedLeadingReasonText: string;
 }
 
-// ---------------------------------------------------------------------------
-// Canonical dominant-negative text (must match label.ts DOMINANT_NEGATIVE_REASON.text)
-// ---------------------------------------------------------------------------
+const DOMINANT_NEGATIVE_TEXT = "This doesn't look like a job posting - score may not be meaningful";
 
-const DOMINANT_NEGATIVE_TEXT =
-  "This doesn't look like a job posting - score may not be meaningful";
-
-// ---------------------------------------------------------------------------
-// Fixtures
-// ---------------------------------------------------------------------------
-
-/**
- * Two inputs that pass the D-25 heuristic gate but are NOT job postings.
- * The LLM backstop (Plan 03-03 `extractLlmEval` `is_job_posting` field) must
- * catch them. Requires `OPENAI_API_KEY_EVAL` to exercise.
- */
 export const NON_POSTING_PASSING_GATE_FIXTURES: NonPostingPassingGateFixture[] = [
   {
     id: 'resume-with-engineer-4x',
@@ -79,10 +16,6 @@ export const NON_POSTING_PASSING_GATE_FIXTURES: NonPostingPassingGateFixture[] =
       title: 'x',
       company: '',
       location: '',
-      // A resume that mentions "engineer" 4 times across 800+ chars.
-      // Passes isLikelyJobPosting: "engineer" is a JOB_TERMS keyword, length >= 200.
-      // But this is a RESUME (first-person, work history), not a job posting.
-      // LLM should return is_job_posting: false.
       description:
         'Jordan Kim — Software Engineer\n\n' +
         'Summary: Experienced software engineer with 7 years of expertise in building ' +
@@ -115,10 +48,6 @@ export const NON_POSTING_PASSING_GATE_FIXTURES: NonPostingPassingGateFixture[] =
       title: 'x',
       company: '',
       location: '',
-      // A SaaS marketing / careers-overview page listing 6 engineer job titles
-      // in promotional prose — not an actual job posting for a specific role.
-      // Passes isLikelyJobPosting: "engineer" appears multiple times, length >= 200.
-      // LLM should return is_job_posting: false (marketing page, not a specific opening).
       description:
         'Join the Helix Team — Build the Future of Healthcare Analytics\n\n' +
         'At Helix, we are on a mission to make precision medicine accessible to everyone. ' +

@@ -1,45 +1,10 @@
-/**
- * Manual calibration script for Phase-3 scoring engine.
- *
- * Runs the 14 evaluation dimensions from AI-SPEC §5 against the bundled fixture
- * set. Exits 0 if every Critical + High dimension passes, else exits 1. Prints
- * a Markdown table summary to stdout.
- *
- * Usage:
- *   npx tsx packages/scoring/scripts/calibrate.ts
- *     -- heuristic-only run: Dims 1, 2, 3, 8, 9, 10, 11, 13, 14-heuristic
- *        (fast, $0 API cost)
- *   OPENAI_API_KEY_EVAL=sk-... npx tsx packages/scoring/scripts/calibrate.ts
- *     -- full run: adds Dims 4, 5, 6, 7, 12, and AI-portions of 1-3, 14
- *        (~$0.02 cost across all fixtures)
- *
- * NOT a test framework (CLAUDE.md "no automated test suite for v1"). tsx is a
- * TypeScript runtime, not Jest/Vitest. No describe/it, no mocks, no snapshots.
- * Just `if (!ok) process.exit(1)`.
- *
- * D-29: fixtures are the regression gate. Re-binning must be justified, not silent.
- *
- * ASYMMETRIC exit rules per AI-SPEC §5 line 760:
- *   - Any Dim 3 failure (Suspicious-band recall) exits 1.
- *   - Dim 2 failure on > 1 FAANG fixture exits 1.
- *   - Dim 2 failure on exactly 1 marginal FAANG fixture exits 0 with warning.
- *   - Critical (1, 2, 3, 5) + High (4, 6, 7, 8, 9, 10, 14) block (exit 1).
- *   - Medium (11, 12, 13) warn-only (no exit 1).
- *
- * @module scripts/calibrate
- */
-
-import { analyzeJob } from '../src/index.js';
-import { makeAiClient } from '../src/openaiClient.js';
 import { bandFor } from '@ghost/shared';
-import { FIXTURES } from '../src/fixtures/postings.js';
+import { INJECTION_STRINGS } from '../src/fixtures/injections.js';
 import { NON_POSTING_FIXTURES } from '../src/fixtures/non-postings.js';
 import { NON_POSTING_PASSING_GATE_FIXTURES } from '../src/fixtures/non-postings-passing-gate.js';
-import { INJECTION_STRINGS } from '../src/fixtures/injections.js';
-
-// ---------------------------------------------------------------------------
-// Setup
-// ---------------------------------------------------------------------------
+import { FIXTURES } from '../src/fixtures/postings.js';
+import { analyzeJob } from '../src/index.js';
+import { makeAiClient } from '../src/openaiClient.js';
 
 const ai = makeAiClient(process.env.OPENROUTER_API_KEY_EVAL ?? null);
 const liveAi = ai !== null;
@@ -58,11 +23,6 @@ const results: DimResult[] = [];
 function skip(dim: string, priority: Priority, reason: string): void {
   results.push({ dim, priority, pass: true, skipped: true, detail: `[SKIP] ${reason}` });
 }
-
-// ---------------------------------------------------------------------------
-// Dimension 1: Calibration-set accuracy (Critical / ENG-11)
-// Runs in both heuristic-only and full-AI mode.
-// ---------------------------------------------------------------------------
 
 {
   let misclassifiedH = 0;
@@ -105,11 +65,6 @@ function skip(dim: string, priority: Priority, reason: string): void {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Dimension 2: FAANG false-positive rate (Critical)
-// Filter by note starting with 'faang-real'. Every FAANG fixture must score >= 80.
-// ---------------------------------------------------------------------------
-
 {
   const faangFixtures = FIXTURES.filter((f) => f.note.startsWith('faang-real'));
   let faangFails = 0;
@@ -123,7 +78,6 @@ function skip(dim: string, priority: Priority, reason: string): void {
     }
   }
 
-  // Asymmetric rule: >1 fail exits 1; exactly 1 fail exits 0 with warning.
   const pass = faangFails === 0 || (faangFails === 1 && faangFixtures.length >= 2);
   results.push({
     dim: '2. FAANG false-positive rate (heuristic-only)',
@@ -151,11 +105,6 @@ function skip(dim: string, priority: Priority, reason: string): void {
     });
   }
 }
-
-// ---------------------------------------------------------------------------
-// Dimension 3: Suspicious-band recall (Critical)
-// Every fixture with expectedBin 'suspicious' or 'ghost' MUST score < 50.
-// ---------------------------------------------------------------------------
 
 {
   const suspFixtures = FIXTURES.filter(
@@ -198,11 +147,6 @@ function skip(dim: string, priority: Priority, reason: string): void {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Dimension 4: Renormalization equivalence (High — live AI only)
-// For >= 18/20 fixtures: |score(ai) - score(null)| <= 15 AND same band.
-// ---------------------------------------------------------------------------
-
 if (!liveAi) {
   skip('4. Renormalization equivalence', 'High', 'requires OPENAI_API_KEY_EVAL');
 } else {
@@ -236,16 +180,9 @@ if (!liveAi) {
   });
 }
 
-// ---------------------------------------------------------------------------
-// Dimension 5: Prompt-injection robustness (Critical — live AI only)
-// For each injection string, wrap in a mid-level fixture and assert score < 100.
-// Also assert no verdict-band flip vs. the base fixture.
-// ---------------------------------------------------------------------------
-
 if (!liveAi) {
   skip('5. Prompt-injection robustness', 'Critical', 'requires OPENAI_API_KEY_EVAL');
 } else {
-  // Use a stable-band suspicious fixture as the base to avoid borderline-Caution noise.
   const baseFixture = FIXTURES.find((f) => f.id === 'ghost-whatsapp-urgent');
   if (baseFixture === undefined) {
     results.push({
@@ -262,9 +199,11 @@ if (!liveAi) {
     const flipDetails: string[] = [];
 
     for (const injStr of INJECTION_STRINGS) {
-      // Prepend the injection string to a minimal posting description.
       const injectedDescription = `${injStr}\n\n${baseFixture.posting.description}`;
-      const injectedPosting = { ...baseFixture.posting, description: injectedDescription.slice(0, 50_000) };
+      const injectedPosting = {
+        ...baseFixture.posting,
+        description: injectedDescription.slice(0, 50_000),
+      };
 
       const injResult = await analyzeJob(injectedPosting, { ai });
       if (injResult.score === 100) {
@@ -272,7 +211,9 @@ if (!liveAi) {
         flipDetails.push(`score=100 on: ${injStr.slice(0, 60)}`);
       } else if (bandFor(injResult.score) !== baseBand) {
         bandFlips += 1;
-        flipDetails.push(`band flip ${baseBand}->${bandFor(injResult.score)} on: ${injStr.slice(0, 60)}`);
+        flipDetails.push(
+          `band flip ${baseBand}->${bandFor(injResult.score)} on: ${injStr.slice(0, 60)}`,
+        );
       }
     }
 
@@ -285,13 +226,6 @@ if (!liveAi) {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Dimension 6: Schema compliance / degradedSignal rate (High — live AI only)
-// Zero parse/refusal-shaped degradedSignal calls on non-adversarial fixtures.
-// (We proxy this by checking that no fixture returns signalBreakdown without
-// ai/llm entries when ai is present — a degraded signal drops from breakdown.)
-// ---------------------------------------------------------------------------
-
 if (!liveAi) {
   skip('6. Schema compliance / degradedSignal rate', 'High', 'requires OPENAI_API_KEY_EVAL');
 } else {
@@ -302,8 +236,6 @@ if (!liveAi) {
     const r = await analyzeJob(f.posting, { ai });
     const aiPresent = r.signalBreakdown.some((e) => e.key === 'ai');
     const llmPresent = r.signalBreakdown.some((e) => e.key === 'llm');
-    // Degraded signal (confidence: 0) is EXCLUDED from breakdown per aggregate.ts.
-    // If ai or llm is missing from breakdown AND usedAi is true, a soft-fail occurred.
     if (r.meta.usedAi && (!aiPresent || !llmPresent)) {
       degradedCount += 1;
       degradedDetails.push(
@@ -319,11 +251,6 @@ if (!liveAi) {
     detail: `${degradedCount}/20 fixtures had AI-signal degradation${degradedDetails.length > 0 ? ` | ${degradedDetails.join(', ')}` : ''}`,
   });
 }
-
-// ---------------------------------------------------------------------------
-// Dimension 7: AbortController timeout adherence (High — live AI only)
-// All durationMs < 6200ms; median < 2000ms.
-// ---------------------------------------------------------------------------
 
 if (!liveAi) {
   skip('7. AbortController timeout adherence', 'High', 'requires OPENAI_API_KEY_EVAL');
@@ -350,11 +277,6 @@ if (!liveAi) {
   });
 }
 
-// ---------------------------------------------------------------------------
-// Dimension 8: Reasons-match-score / Explainability Gap (High)
-// For >= 85% of fixtures with score < 50: |reasons[0].signed| / (100-score) >= 0.05
-// ---------------------------------------------------------------------------
-
 {
   const suspFixtures = FIXTURES.filter(
     (f) => f.expectedBin === 'suspicious' || f.expectedBin === 'ghost',
@@ -364,7 +286,7 @@ if (!liveAi) {
 
   for (const f of suspFixtures) {
     const r = await analyzeJob(f.posting, { ai: null });
-    if (r.score >= 50) continue; // Only check genuinely suspicious-scored fixtures
+    if (r.score >= 50) continue;
     const firstReason = r.reasons[0];
     if (firstReason === undefined) {
       explainFails.push(`${f.id}: no reasons returned`);
@@ -382,8 +304,7 @@ if (!liveAi) {
   }
 
   const scoredCount = suspFixtures.filter((_f) => {
-    // Count only those that actually scored < 50 in heuristic mode
-    return true; // We check inside the loop above
+    return true;
   }).length;
   const passRate = scoredCount > 0 ? passCount / scoredCount : 1;
 
@@ -395,11 +316,6 @@ if (!liveAi) {
   });
 }
 
-// ---------------------------------------------------------------------------
-// Dimension 9: Green-flag prioritization (High)
-// Every legitimate-band fixture must have >= 1 green-flag reason in top 3.
-// ---------------------------------------------------------------------------
-
 {
   const legitFixtures = FIXTURES.filter((f) => f.expectedBin === 'legitimate');
   let greenFails = 0;
@@ -408,15 +324,15 @@ if (!liveAi) {
   for (const f of legitFixtures) {
     const r = await analyzeJob(f.posting, { ai: null });
     if (r.score < 80) {
-      // Score didn't reach legitimate band — green-flag check is N/A for this fixture
-      // (it will already be caught by Dim 2 if it's a FAANG fixture)
       continue;
     }
     const topThree = r.reasons.slice(0, 3);
     const hasGreen = topThree.some((reason) => reason.signed > 0);
     if (!hasGreen) {
       greenFails += 1;
-      greenMisses.push(`${f.id}: score=${r.score} reasons=${topThree.map((r) => r.signed).join(',')}`);
+      greenMisses.push(
+        `${f.id}: score=${r.score} reasons=${topThree.map((r) => r.signed).join(',')}`,
+      );
     }
   }
 
@@ -428,12 +344,6 @@ if (!liveAi) {
   });
 }
 
-// ---------------------------------------------------------------------------
-// Dimension 10: Quoted-evidence presence (High)
-// Red-flag reasons (excluding specificity/ai/llm signalKeys) >= 70% have evidenceQuote.
-// Green-flag specificity/scam reasons >= 80% have evidenceQuote.
-// ---------------------------------------------------------------------------
-
 {
   let redEligible = 0;
   let redWithQuote = 0;
@@ -444,15 +354,17 @@ if (!liveAi) {
     const r = await analyzeJob(f.posting, { ai: null });
     for (const reason of r.reasons) {
       if (reason.signed < 0) {
-        // Red-flag reason
-        if (reason.signalKey !== 'specificity' && reason.signalKey !== 'ai' && reason.signalKey !== 'llm') {
+        if (
+          reason.signalKey !== 'specificity' &&
+          reason.signalKey !== 'ai' &&
+          reason.signalKey !== 'llm'
+        ) {
           redEligible += 1;
           if (reason.evidenceQuote !== undefined && reason.evidenceQuote.length > 0) {
             redWithQuote += 1;
           }
         }
       } else if (reason.signed > 0) {
-        // Green-flag reason from specificity
         if (reason.signalKey === 'specificity' || reason.signalKey === 'scam') {
           greenSpecScamEligible += 1;
           if (reason.evidenceQuote !== undefined && reason.evidenceQuote.length > 0) {
@@ -469,15 +381,10 @@ if (!liveAi) {
   results.push({
     dim: '10. Quoted-evidence presence',
     priority: 'High',
-    pass: redRate >= 0.70 && greenRate >= 0.80,
+    pass: redRate >= 0.7 && greenRate >= 0.8,
     detail: `red-flag quote rate: ${(redRate * 100).toFixed(0)}% (${redWithQuote}/${redEligible}, need 70%) | green specificity/scam quote rate: ${(greenRate * 100).toFixed(0)}% (${greenSpecScamWithQuote}/${greenSpecScamEligible}, need 80%)`,
   });
 }
-
-// ---------------------------------------------------------------------------
-// Dimension 11: Non-job-posting handling (Medium)
-// All 4 non-posting fixtures must score 50 with the dominant-negative leading reason.
-// ---------------------------------------------------------------------------
 
 {
   let nonPostingFails = 0;
@@ -504,11 +411,6 @@ if (!liveAi) {
   });
 }
 
-// ---------------------------------------------------------------------------
-// Dimension 12: LLM is_job_posting backstop (Medium — live AI only)
-// For both non-posting-passing-gate fixtures: leading reason must be dominant-negative.
-// ---------------------------------------------------------------------------
-
 if (!liveAi) {
   skip('12. LLM is_job_posting backstop', 'Medium', 'requires OPENAI_API_KEY_EVAL');
 } else {
@@ -518,13 +420,10 @@ if (!liveAi) {
   for (const f of NON_POSTING_PASSING_GATE_FIXTURES) {
     const r = await analyzeJob(f.posting, { ai });
     const firstReason = r.reasons[0];
-    const reasonOk =
-      firstReason !== undefined && firstReason.text === f.expectedLeadingReasonText;
+    const reasonOk = firstReason !== undefined && firstReason.text === f.expectedLeadingReasonText;
     if (!reasonOk) {
       backstopFails += 1;
-      backstopMisses.push(
-        `${f.id}: reason="${firstReason?.text ?? 'none'}"`,
-      );
+      backstopMisses.push(`${f.id}: reason="${firstReason?.text ?? 'none'}"`);
     }
   }
 
@@ -535,11 +434,6 @@ if (!liveAi) {
     detail: `${backstopFails}/${NON_POSTING_PASSING_GATE_FIXTURES.length} gate-passing non-postings lacked dominant-negative reason${backstopMisses.length > 0 ? ` | ${backstopMisses.join(', ')}` : ''}`,
   });
 }
-
-// ---------------------------------------------------------------------------
-// Dimension 13: Reason-text plain-English legibility (Medium)
-// Every reason.text <= 140 chars, no jargon tokens, no markdown, terminal punctuation.
-// ---------------------------------------------------------------------------
 
 {
   const JARGON_PATTERN = /\b(ghostiness|signalKey|confidence|weight|0\.\d{2,})\b/i;
@@ -554,7 +448,9 @@ if (!liveAi) {
       const text = reason.text;
       if (text.length > 140) {
         legibilityFails += 1;
-        legibilityMisses.push(`${f.id}: too long (${text.length} chars): "${text.slice(0, 60)}..."`);
+        legibilityMisses.push(
+          `${f.id}: too long (${text.length} chars): "${text.slice(0, 60)}..."`,
+        );
       }
       if (JARGON_PATTERN.test(text)) {
         legibilityFails += 1;
@@ -574,11 +470,6 @@ if (!liveAi) {
     detail: `${legibilityFails} reason-text violations${legibilityMisses.length > 0 ? ` | ${legibilityMisses.slice(0, 5).join(', ')}` : ''}`,
   });
 }
-
-// ---------------------------------------------------------------------------
-// Dimension 14: Latency-budget end-to-end (High)
-// Heuristic-only: median < 50ms. Live-AI: median < 1800ms, max < 6200ms.
-// ---------------------------------------------------------------------------
 
 {
   const heuristicDurations: number[] = [];
@@ -623,10 +514,6 @@ if (!liveAi) {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Print Markdown table summary
-// ---------------------------------------------------------------------------
-
 console.log('\n## Ghost Job Detector — Phase-3 Calibration Report\n');
 console.log(`Mode: ${liveAi ? 'full (heuristics + live AI)' : 'heuristic-only'}\n`);
 console.log('| Dim | Priority | Result | Detail |');
@@ -637,19 +524,14 @@ for (const r of results) {
   console.log(`| ${r.dim} | ${r.priority} | ${marker} | ${r.detail} |`);
 }
 
-// ---------------------------------------------------------------------------
-// Asymmetric exit rules (AI-SPEC §5 line 760)
-// ---------------------------------------------------------------------------
-
-// Special rule: Dim 3 failure (suspicious-band recall) always exits 1.
 const dim3Result = results.find((r) => r.dim.startsWith('3. Suspicious') && !r.skipped);
 if (dim3Result !== undefined && !dim3Result.pass) {
-  console.error('\n[FAIL] Dimension 3 (Suspicious-band recall) failed — any scam false-negative is Critical. Exiting 1.');
+  console.error(
+    '\n[FAIL] Dimension 3 (Suspicious-band recall) failed — any scam false-negative is Critical. Exiting 1.',
+  );
   process.exit(1);
 }
 
-// Special rule: Dim 2 failure on > 1 FAANG fixture exits 1.
-// Dim 2 failure on exactly 1 is a warning (pass=true with warning in detail), already handled above.
 const dim2Results = results.filter((r) => r.dim.startsWith('2. FAANG') && !r.skipped);
 for (const dim2 of dim2Results) {
   if (!dim2.pass) {
@@ -658,17 +540,11 @@ for (const dim2 of dim2Results) {
   }
 }
 
-// Critical + High failures (excluding Medium warn-only dimensions 11, 12, 13)
 const blockingFailures = results.filter(
-  (r) =>
-    !r.pass &&
-    !r.skipped &&
-    (r.priority === 'Critical' || r.priority === 'High'),
+  (r) => !r.pass && !r.skipped && (r.priority === 'Critical' || r.priority === 'High'),
 );
 
-const warnings = results.filter(
-  (r) => !r.pass && !r.skipped && r.priority === 'Medium',
-);
+const warnings = results.filter((r) => !r.pass && !r.skipped && r.priority === 'Medium');
 
 if (warnings.length > 0) {
   console.warn(

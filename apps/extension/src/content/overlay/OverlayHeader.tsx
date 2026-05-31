@@ -1,20 +1,7 @@
-/**
- * OverlayHeader — 44px-tall header bar at the top of the overlay container.
- *
- * Layout (post-heuristics-pill removal):
- *   [👻 Ghost Job Detector] ............................. [×]
- *    icon + wordmark                          dismiss button (32×32)
- *
- * Hard constraints (unchanged):
- *   - Icons are inline SVG — NO icon-library import (UI-SPEC §"Design System").
- *   - X-dismiss carries explicit aria-label + focus-visible ring.
- */
-
 interface IconProps {
   className?: string;
 }
 
-/** Inline X glyph — 16x16 viewBox with two diagonal stroke lines. */
 function XIcon({ className }: IconProps) {
   return (
     <svg
@@ -32,17 +19,9 @@ function XIcon({ className }: IconProps) {
   );
 }
 
-/**
- * Ghost glyph — 18x18, brand-tinted. Two-tone: a soft brand fill (12% alpha)
- * behind a 1.4-stroke outline so it reads as a logo, not a clipart icon.
- */
 function GhostIcon({ className }: IconProps) {
   return (
-    <svg
-      viewBox="0 0 18 18"
-      className={className}
-      aria-hidden="true"
-    >
+    <svg viewBox="0 0 18 18" className={className} aria-hidden="true">
       <path
         d="M3 14.5V8a6 6 0 0 1 12 0v6.5c0 .35-.4.55-.7.3l-1.55-1.25-1.6 1.3c-.22.18-.55.18-.77 0L9 13.55l-1.38 1.3c-.22.18-.55.18-.77 0L5.25 13.55 3.7 14.8c-.3.25-.7.05-.7-.3z"
         fill="color-mix(in oklch, var(--ov-brand) 22%, transparent)"

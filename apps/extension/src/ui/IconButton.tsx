@@ -1,9 +1,3 @@
-/**
- * Shared 32×32 ghost-glass icon button — used for theme toggle, settings,
- * expand-to-side-panel, etc. Brand focus ring, press-scale, hover surface.
- * Always carries an aria-label (icon-only).
- */
-
 import type { ReactNode } from 'react';
 
 interface IconButtonProps {

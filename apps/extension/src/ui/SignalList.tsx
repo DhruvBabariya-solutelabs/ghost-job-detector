@@ -1,9 +1,3 @@
-/**
- * "Why this score" — the reason cards, grouped working-against-it (negative)
- * then in-its-favour (positive), each card stagger-revealed 55ms apart after
- * the gauge settles. Up to 5 reasons (engine contract); empty → friendly note.
- */
-
 import type { Reason, RiskBand } from '@ghost/shared';
 import { SignalCard } from './SignalCard';
 

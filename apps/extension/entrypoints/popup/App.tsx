@@ -1,41 +1,24 @@
-/**
- * Popup — 380px premium redesign.
- *
- * One surface, five states (onboarding / loading / result / empty / error)
- * crossfaded around a persistent gauge anchor. The most-recent analysis is the
- * hero; samples trigger the full reveal; history lets you revisit past scans;
- * the verdict recolours the whole popup's ambient gradient + accents.
- *
- * Keeps all prior functionality: demo samples (LOAD_DEMO), scan history
- * (GET_HISTORY), and the Options link. Adds: animated gauge hero, signal cards,
- * onboarding, theme toggle, ghosts-dodged counter, shareable card, and a
- * one-tap expand into the side-panel.
- *
- * Security gates preserved: no console.*, no lucide-react, no direct
- * chrome.storage.local writes of the BYOK key (UI prefs go through the gateway).
- */
-
-import { useState } from 'react';
 import type { RiskBand } from '@ghost/shared';
+import { useState } from 'react';
 import { setOnboarded } from '@/src/lib/storage';
-import { useGhostUi } from '@/src/ui/useGhostUi';
-import { useReducedMotion } from '@/src/ui/useReducedMotion';
-import { verdictVars, VERDICTS } from '@/src/ui/verdict';
 import { Brand } from '@/src/ui/Brand';
-import { ThemeToggle } from '@/src/ui/ThemeToggle';
-import { IconButton } from '@/src/ui/IconButton';
 import { GhostsDodged } from '@/src/ui/GhostsDodged';
-import { SettingsIcon, ExpandIcon, ShareIcon } from '@/src/ui/icons';
-import { ResultHero } from '@/src/ui/ResultHero';
-import { SignalList } from '@/src/ui/SignalList';
-import { SampleChips } from '@/src/ui/SampleChips';
 import { HistoryList } from '@/src/ui/HistoryList';
+import { IconButton } from '@/src/ui/IconButton';
+import { ExpandIcon, SettingsIcon, ShareIcon } from '@/src/ui/icons';
 import { Onboarding } from '@/src/ui/Onboarding';
+import { ResultHero } from '@/src/ui/ResultHero';
+import { SampleChips } from '@/src/ui/SampleChips';
 import { ShareCard } from '@/src/ui/ShareCard';
-import { LoadingState } from '@/src/ui/states/LoadingState';
+import { SignalList } from '@/src/ui/SignalList';
 import { EmptyState } from '@/src/ui/states/EmptyState';
 import { ErrorState } from '@/src/ui/states/ErrorState';
+import { LoadingState } from '@/src/ui/states/LoadingState';
 import { OfflineBanner } from '@/src/ui/states/OfflineState';
+import { ThemeToggle } from '@/src/ui/ThemeToggle';
+import { useGhostUi } from '@/src/ui/useGhostUi';
+import { useReducedMotion } from '@/src/ui/useReducedMotion';
+import { VERDICTS, verdictVars } from '@/src/ui/verdict';
 
 const SectionLabel = ({ children }: { children: string }) => (
   <h3
@@ -95,7 +78,6 @@ export function App() {
         ...vVars,
       }}
     >
-      {/* Header */}
       <header
         style={{
           display: 'flex',
@@ -120,7 +102,6 @@ export function App() {
         </div>
       </header>
 
-      {/* Scroll body */}
       <div
         style={{
           flex: 1,
@@ -183,7 +164,6 @@ export function App() {
               gaugeSize={196}
             />
 
-            {/* Actions */}
             <div style={{ display: 'flex', justifyContent: 'center' }}>
               <button
                 type="button"
@@ -234,7 +214,6 @@ export function App() {
         )}
       </div>
 
-      {/* Footer: ghosts-dodged */}
       {ui.status !== 'onboarding' && (
         <footer
           style={{

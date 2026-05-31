@@ -1,9 +1,3 @@
-/**
- * Offline banner — slim, dismissible-by-reconnection notice. Live analysis needs
- * the network; cached history + samples still work, so this is a banner rather
- * than a full-screen takeover.
- */
-
 import { WifiOffIcon } from '../icons';
 
 export function OfflineBanner() {

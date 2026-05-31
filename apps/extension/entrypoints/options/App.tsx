@@ -1,40 +1,10 @@
-/**
- * Options page — BYOK OpenRouter key paste + Save + Test Key + Privacy disclosure.
- *
- * 2026-05 — BYOK provider switched from OpenAI to OpenRouter. Same UI contract,
- * different key format (`sk-or-v1-...`) and verification endpoint
- * (https://openrouter.ai/api/v1/auth/key).
- *
- * 2026-05 — Visual refit onto the premium dark-glass design system (src/ui/theme.css)
- * shared with the popup / side panel / overlay, replacing the standalone Tailwind
- * light theme. Authored with inline styles + `gjd-*` classes like those surfaces.
- * Behaviour, message contract, and the EXT-16 privacy copy are unchanged.
- *
- * Trust-moment surface (EXT-11 / EXT-12 / EXT-16):
- *   - EXT-11: input type="password" + show/hide eye-glyph toggle.
- *   - EXT-12: Test Key button validates the SAVED value (NOT the unsaved input)
- *     against openrouter.ai via the SW's TEST_KEY handler. D-52 + Pitfall 6.
- *   - EXT-16: Three-paragraph privacy disclosure rendered with provider-neutral
- *     copy — paraphrase = trust violation. Copy is preserved verbatim.
- *
- * Storage goes through the lib/storage.ts gateway (getApiKey/setApiKey) —
- * the same module also applies D-51 quote+whitespace sanitization at write.
- *
- * Security gates (verified by grep acceptance criteria):
- *   - No console.log/warn/error/debug/info anywhere — BYOK key NEVER logged.
- *   - No direct chrome.storage.local access — gateway invariant.
- *   - No lucide-react import — all glyphs are inline SVG.
- *   - TEST_KEY message payload is `savedKey` (NOT `input`/`trimmedInput`) per
- *     D-52 + Pitfall 6.
- */
-
 import type { ReactNode, SVGProps } from 'react';
 import { useEffect, useState } from 'react';
-import { getApiKey, setApiKey } from '@/src/lib/storage';
 import type { RpcResponse } from '@/src/lib/messages';
+import { clearApiKey, getApiKey, setApiKey } from '@/src/lib/storage';
 import { Brand } from '@/src/ui/Brand';
-import { ThemeToggle } from '@/src/ui/ThemeToggle';
 import { CheckIcon } from '@/src/ui/icons';
+import { ThemeToggle } from '@/src/ui/ThemeToggle';
 
 type TestKeyStatus =
   | { kind: 'idle' }
@@ -46,7 +16,6 @@ type TestKeyStatus =
 
 type SaveStatus = { kind: 'idle' } | { kind: 'saving' } | { kind: 'saved' };
 
-// OpenRouter keys are `sk-or-v1-<hex>`. Used informationally — does NOT block save.
 const KEY_REGEX = /^sk-or-v1-[A-Za-z0-9_-]{20,}$/;
 
 export function App() {
@@ -55,6 +24,7 @@ export function App() {
   const [revealed, setRevealed] = useState(false);
   const [testStatus, setTestStatus] = useState<TestKeyStatus>({ kind: 'idle' });
   const [saveStatus, setSaveStatus] = useState<SaveStatus>({ kind: 'idle' });
+  const [confirmRemove, setConfirmRemove] = useState(false);
 
   useEffect(() => {
     void getApiKey().then((k) => {
@@ -69,7 +39,6 @@ export function App() {
   const saveDisabled = !hasUnsavedChange || trimmedInput.length === 0;
   const testDisabled = savedKey === null || hasUnsavedChange || testStatus.kind === 'testing';
 
-  // Connection state for the header pill — never reveals the key itself.
   const connected = savedKey !== null;
   const keyTail = connected && savedKey.length >= 4 ? savedKey.slice(-4) : null;
 
@@ -84,6 +53,20 @@ export function App() {
     setSavedKey(trimmedInput);
     setSaveStatus({ kind: 'saved' });
     setTimeout(() => setSaveStatus({ kind: 'idle' }), 3000);
+  };
+
+  const handleRemove = async (): Promise<void> => {
+    if (!confirmRemove) {
+      setConfirmRemove(true);
+      setTimeout(() => setConfirmRemove(false), 3500);
+      return;
+    }
+    await clearApiKey();
+    setSavedKey(null);
+    setInput('');
+    setConfirmRemove(false);
+    setTestStatus({ kind: 'idle' });
+    setSaveStatus({ kind: 'idle' });
   };
 
   const handleTest = async (): Promise<void> => {
@@ -112,7 +95,6 @@ export function App() {
         flexDirection: 'column',
       }}
     >
-      {/* Sticky glass header — mirrors the side panel. */}
       <header
         style={{
           display: 'flex',
@@ -140,7 +122,6 @@ export function App() {
           padding: '48px 22px 72px',
         }}
       >
-        {/* Hero */}
         <div className="gjd-rise" style={{ animationDelay: '40ms' }}>
           <span
             style={{
@@ -175,12 +156,11 @@ export function App() {
               maxWidth: 520,
             }}
           >
-            Ghost Job Detector runs its smartest signals through your own OpenRouter key.
-            It lives on this device only — we never see it.
+            Ghost Job Detector runs its smartest signals through your own OpenRouter key. It lives
+            on this device only — we never see it.
           </p>
         </div>
 
-        {/* API key card — the hero surface with a violet ambient glow. */}
         <section
           className="gjd-card gjd-rise"
           style={{
@@ -279,7 +259,6 @@ export function App() {
                   boxSizing: 'border-box',
                 }}
               />
-              {/* Live format check — reassures before the user even saves. */}
               {isFormatOk && (
                 <span
                   className="gjd-fade"
@@ -330,9 +309,14 @@ export function App() {
                 color: 'var(--ink-muted)',
               }}
             >
-              Used only for AI-powered signals (authenticity + AI-generated-text detection).
-              Stored locally in this browser. Never sent to our servers. Don't have one?{' '}
-              <a className="gjd-link" href="https://openrouter.ai/keys" target="_blank" rel="noopener">
+              Used only for AI-powered signals (authenticity + AI-generated-text detection). Stored
+              locally in this browser. Never sent to our servers. Don't have one?{' '}
+              <a
+                className="gjd-link"
+                href="https://openrouter.ai/keys"
+                target="_blank"
+                rel="noopener"
+              >
                 Get a key
                 <ExternalLinkIcon size={11} />
               </a>
@@ -430,9 +414,53 @@ export function App() {
                   </>
                 )}
               </button>
+
+              {connected && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    void handleRemove();
+                  }}
+                  title="Remove the saved key from this device"
+                  className="gjd-focus"
+                  style={{
+                    all: 'unset',
+                    marginLeft: 'auto',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 7,
+                    padding: '10px 16px',
+                    borderRadius: 'var(--r-pill)',
+                    fontSize: 'var(--t-sm)',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    boxSizing: 'border-box',
+                    color: confirmRemove ? '#fff' : '#ff7585',
+                    background: confirmRemove ? '#e23950' : 'transparent',
+                    border: `1px solid ${
+                      confirmRemove ? '#e23950' : 'color-mix(in oklab, #ff5f6d 42%, transparent)'
+                    }`,
+                  }}
+                >
+                  <svg
+                    width={15}
+                    height={15}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={1.7}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13M10 11v6M14 11v6" />
+                  </svg>
+                  {confirmRemove ? 'Confirm remove' : 'Remove key'}
+                </button>
+              )}
             </div>
 
-            {/* Verification feedback — one calm region, animated in. */}
             {testStatus.kind === 'success' && (
               <StatusNote tone="success" icon={<CheckIcon size={15} />}>
                 Key works — you're all set.
@@ -457,7 +485,6 @@ export function App() {
           </div>
         </section>
 
-        {/* Privacy & data — verbatim EXT-16 disclosure, premium card treatment. */}
         <section className="gjd-rise" style={{ marginTop: 30, animationDelay: '200ms' }}>
           <h2
             style={{
@@ -478,10 +505,11 @@ export function App() {
               you're on, and we never log your OpenRouter key.
             </PrivacyCard>
             <PrivacyCard icon={<LockIcon size={17} />} title="Where your key lives">
-              Your OpenRouter key is stored in <code className="gjd-code">chrome.storage.local</code>{' '}
-              on this device only. It never leaves your browser except for the one direct call to
-              openrouter.ai/api/v1/auth/key to verify it works (the "Test key" button) and the
-              per-analysis calls when you view a job.
+              Your OpenRouter key is stored in{' '}
+              <code className="gjd-code">chrome.storage.local</code> on this device only. It never
+              leaves your browser except for the one direct call to openrouter.ai/api/v1/auth/key to
+              verify it works (the "Test key" button) and the per-analysis calls when you view a
+              job.
             </PrivacyCard>
             <PrivacyCard icon={<BanIcon size={17} />} title="What we don't do">
               No accounts. No tracking. No analytics. No cross-device sync. No selling anything. If
@@ -508,11 +536,6 @@ export function App() {
   );
 }
 
-/* ===================================================================== */
-/* Local presentational helpers                                          */
-/* ===================================================================== */
-
-/** Soft violet-tinted square that frames a section glyph. */
 function IconChip({ children }: { children: ReactNode }) {
   return (
     <span
@@ -534,7 +557,6 @@ function IconChip({ children }: { children: ReactNode }) {
   );
 }
 
-/** Header status: live green when a key is saved, quiet amber when not. */
 function ConnectionPill({ connected, tail }: { connected: boolean; tail: string | null }) {
   const c = connected
     ? { fg: '#34d399', bg: 'rgba(52,211,153,0.12)', bd: 'rgba(52,211,153,0.30)' }
@@ -558,7 +580,13 @@ function ConnectionPill({ connected, tail }: { connected: boolean; tail: string 
     >
       <span
         className={connected ? 'gjd-glow' : undefined}
-        style={{ width: 7, height: 7, borderRadius: '50%', background: c.fg, display: 'inline-block' }}
+        style={{
+          width: 7,
+          height: 7,
+          borderRadius: '50%',
+          background: c.fg,
+          display: 'inline-block',
+        }}
       />
       {connected ? `Connected${tail ? ` · …${tail}` : ''}` : 'Not connected'}
     </span>
@@ -647,12 +675,6 @@ function PrivacyCard({
     </div>
   );
 }
-
-/* ===================================================================== */
-/* Inline SVG glyphs — lucide-react forbidden (UI-SPEC line 29). Static  */
-/* JSX, no dangerouslySetInnerHTML, so React escaping defends XSS even    */
-/* though authored locally (T-04-54 mitigation). 24-grid, 1.6 stroke.    */
-/* ===================================================================== */
 
 type GlyphProps = SVGProps<SVGSVGElement> & { size?: number };
 
@@ -763,7 +785,6 @@ function EyeOffIcon(p: GlyphProps) {
   );
 }
 
-/** Tiny spinner — uses the shared gjd-spin keyframe. */
 function Spinner() {
   return (
     <svg

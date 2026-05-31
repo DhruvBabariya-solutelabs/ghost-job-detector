@@ -1,23 +1,6 @@
-/**
- * RiskLabel — the band-tinted verdict chip directly under the score-dial.
- *
- * Hero Score redesign: chip now carries a band-appropriate inline SVG icon
- * (check / warn-triangle / alert / x-circle) + a 1px tinted border + slightly
- * larger horizontal padding to read as a verdict, not a tag.
- *
- * Visual rule: 18px Semibold text in the band's DEEP color variant
- * (BAND_DEEP_TEXT — AA-contrast hand-picked per UI-SPEC §"Color" lines 139-143)
- * on a 14%-alpha tinted background of the band's RISK_COLOR.
- *
- * Iteration rule: iterate RISK_BANDS via for..of (NOT .find()) — mirrors
- * risk.ts:39-44's bandFor precedent. Under noUncheckedIndexedAccess, .find()
- * returns `T | undefined` regardless of the closed-tuple shape, which forces
- * unnecessary defensive code at every call-site.
- */
-
-import type { ReactElement } from 'react';
 import type { RiskBand } from '@ghost/shared';
 import { RISK_BANDS, RISK_COLORS } from '@ghost/shared';
+import type { ReactElement } from 'react';
 
 export interface RiskLabelProps {
   band: RiskBand;
@@ -27,7 +10,6 @@ interface IconProps {
   className?: string;
 }
 
-/** Check glyph — for the "legitimate" band. */
 function CheckIcon({ className }: IconProps) {
   return (
     <svg
@@ -45,7 +27,6 @@ function CheckIcon({ className }: IconProps) {
   );
 }
 
-/** Warning triangle — for the "caution" band. */
 function WarnIcon({ className }: IconProps) {
   return (
     <svg
@@ -65,7 +46,6 @@ function WarnIcon({ className }: IconProps) {
   );
 }
 
-/** Alert-circle — for the "suspicious" band. */
 function AlertIcon({ className }: IconProps) {
   return (
     <svg
@@ -84,7 +64,6 @@ function AlertIcon({ className }: IconProps) {
   );
 }
 
-/** X-circle — for the "ghost" band. */
 function XCircleIcon({ className }: IconProps) {
   return (
     <svg
@@ -112,8 +91,6 @@ const BAND_ICONS: Record<RiskBand, (props: IconProps) => ReactElement> = {
 };
 
 export function RiskLabel({ band }: RiskLabelProps) {
-  // Pattern D nuance per risk.ts:39-44 — for..of over the const tuple,
-  // never .find() which returns T | undefined.
   let label = 'Unknown';
   for (const b of RISK_BANDS) {
     if (b.key === band) {
@@ -124,7 +101,6 @@ export function RiskLabel({ band }: RiskLabelProps) {
 
   const Icon = BAND_ICONS[band];
   const accent = RISK_COLORS[band];
-  // Bright accent text reads on the dark glass (replaces the light-mode deep text).
   const brightText = `color-mix(in oklch, ${accent} 72%, white)`;
 
   return (

@@ -19,12 +19,12 @@ const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLI
           'focus-visible:shadow-[0_0_0_3px_oklch(0.55_0.18_260/0.25)]',
           'disabled:cursor-not-allowed disabled:opacity-50',
           'file:border-0 file:bg-transparent file:text-sm file:font-medium',
-          className
+          className,
         )}
         {...props}
       />
     );
-  }
+  },
 );
 Input.displayName = 'Input';
 
@@ -45,7 +45,7 @@ const Textarea = React.forwardRef<
         'focus-visible:shadow-[0_0_0_3px_oklch(0.55_0.18_260/0.25)]',
         'disabled:cursor-not-allowed disabled:opacity-50',
         'resize-y',
-        className
+        className,
       )}
       {...props}
     />

@@ -1,18 +1,3 @@
-/**
- * ProblemSection (landing) — "What's a ghost job?" explainer block.
- *
- * UI-SPEC §"Landing page — Problem block" lines 496-524 + §Copywriting lines
- * 208-214 (body prose preserved character-for-character).
- *
- * Layout deviates from UI-SPEC: typographic-pull-quote treatment for the lead
- * sentence, then body, then the 4-band chip row with its own eyebrow. Brings
- * editorial rhythm to a section that was a flat 3-paragraph blog block.
- *
- * The 4-band key uses the FULL RISK_BANDS labels — "Likely Ghost Job", NOT
- * the shortened "Ghost" used in the demo buttons (UI-SPEC line 214 explicit).
- * Chip styling mirrors the demo buttons: 12% alpha bg + BAND_DEEP_TEXT.
- */
-
 import { RISK_BANDS, RISK_COLORS } from '@ghost/shared';
 
 export function ProblemSection() {
@@ -29,23 +14,21 @@ export function ProblemSection() {
         </div>
 
         <p className="text-xl md:text-2xl lg:text-[1.7rem] text-[--color-ink] leading-[1.35] max-w-[720px] font-medium tracking-tight">
-          A posting that looks real but isn't — no one's hiring, the
-          description is filler, or worse, it's a scam.
+          A posting that looks real but isn't — no one's hiring, the description is filler, or
+          worse, it's a scam.
         </p>
 
         <div className="flex flex-col gap-4 max-w-[680px]">
           <p className="text-base md:text-lg text-[--color-ink] leading-[1.65]">
-            Ghost jobs come in three flavors: postings open for months with no
-            real intent to hire, AI-generated filler designed to harvest
-            resumes, and outright scams that ask you to message a recruiter on
-            WhatsApp. The signals that give them away aren't always obvious —
+            Ghost jobs come in three flavors: postings open for months with no real intent to hire,
+            AI-generated filler designed to harvest resumes, and outright scams that ask you to
+            message a recruiter on WhatsApp. The signals that give them away aren't always obvious —
             until you know what to look for.
           </p>
           <p className="text-base md:text-lg text-[--color-ink] leading-[1.65]">
-            Ghost Job Detector reads the posting you're looking at, runs it
-            through five trust signals, and shows you a score in under three
-            seconds. You stay on the page. You skip the bad ones. You save the
-            hour you'd have spent writing a cover letter into the void.
+            Ghost Job Detector reads the posting you're looking at, runs it through five trust
+            signals, and shows you a score in under three seconds. You stay on the page. You skip
+            the bad ones. You save the hour you'd have spent writing a cover letter into the void.
           </p>
         </div>
 

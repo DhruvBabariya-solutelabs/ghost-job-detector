@@ -1,28 +1,3 @@
-/**
- * SignalBreakdownDrawer — the expandable bottom drawer of weighted bars.
- *
- * Hero Score redesign:
- *   - Uppercase eyebrow "SIGNAL BREAKDOWN" header at top of drawer
- *   - Bars wrapped in a divider-topped section to read as one group
- *   - Bar fill: same band color but with a subtle gradient toward the right
- *     for a sense of progress/depth
- *
- * Motion (D-50): max-height transitions 0 → 320px over 300ms with
- * cubic-bezier(0.25, 1, 0.5, 1) (ease-out-quart — slightly snappier than
- * EASE_OUT_SOFT; drawer is secondary motion, not the hero). Each bar's
- * width transitions 0 → min(100, contribution*2)% with the same easing.
- *
- * UI-SPEC line 370 — simplified v1 rule: ALL bars use RISK_COLORS[band]
- * (the band color of the final score), NOT per-signal directional color.
- * Single visual story per overlay.
- *
- * `inert` attribute when collapsed (UI-SPEC §Accessibility): removes the
- * collapsed drawer's contents from tab order + screen reader output.
- * React's TS types don't yet cover the inert attribute fully — the spread
- * `{...(!open && { inert: '' as unknown as boolean })}` is the verified
- * workaround.
- */
-
 import type { RiskBand, SignalBreakdownEntry } from '@ghost/shared';
 import { RISK_COLORS } from '@ghost/shared';
 import { SIGNAL_LABELS } from './labels.js';
@@ -75,9 +50,7 @@ export function SignalBreakdownDrawer({
                 <div
                   className="h-full rounded-full transition-[width] duration-300"
                   style={{
-                    width: open
-                      ? `${Math.min(100, bar.contribution * 2)}%`
-                      : '0%',
+                    width: open ? `${Math.min(100, bar.contribution * 2)}%` : '0%',
                     backgroundImage: barGradient,
                     transitionTimingFunction: EASE_OUT_QUART,
                   }}

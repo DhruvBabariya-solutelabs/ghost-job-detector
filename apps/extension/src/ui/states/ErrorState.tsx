@@ -1,9 +1,3 @@
-/**
- * Error — a puzzled ghost and a single, clear recovery path (Retry). Message
- * states what happened and how to fix it; never a raw error string (the SW
- * already redacts those to avoid leaking the BYOK key).
- */
-
 import { GhostMascot } from '../GhostMascot';
 import { RefreshIcon } from '../icons';
 import { useReducedMotion } from '../useReducedMotion';

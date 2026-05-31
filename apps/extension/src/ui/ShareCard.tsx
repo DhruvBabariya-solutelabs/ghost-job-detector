@@ -1,19 +1,7 @@
-/**
- * Shareable verdict card — the second wow moment.
- *
- * Composes a 1080×1080 image on a canvas: verdict-tinted dark backdrop, the
- * 270° gauge arc in the verdict gradient, the big score, the verdict word, the
- * one-line verdict, and the posting title. Always rendered on a premium dark
- * card regardless of the app theme. One tap to Download or Copy the PNG.
- *
- * Presented as a modal sheet (scrim 55% black, animates from centre, Escape /
- * backdrop to dismiss). Canvas drawing is layout-free.
- */
-
 import { useEffect, useRef, useState } from 'react';
 import type { HistoryEntry } from '@/src/lib/messages';
-import { VERDICTS, BRAND_VIOLET } from './verdict';
-import { DownloadIcon, ShareIcon, CheckIcon } from './icons';
+import { CheckIcon, DownloadIcon, ShareIcon } from './icons';
+import { BRAND_VIOLET, VERDICTS } from './verdict';
 
 const SIZE = 1080;
 
@@ -36,7 +24,6 @@ function draw(canvas: HTMLCanvasElement, entry: HistoryEntry): void {
   const v = VERDICTS[response.risk];
   const cx = SIZE / 2;
 
-  // Backdrop
   ctx.fillStyle = '#0a0a0f';
   ctx.fillRect(0, 0, SIZE, SIZE);
   const amb = ctx.createRadialGradient(cx, 120, 80, cx, 120, 900);
@@ -45,7 +32,6 @@ function draw(canvas: HTMLCanvasElement, entry: HistoryEntry): void {
   ctx.fillStyle = amb;
   ctx.fillRect(0, 0, SIZE, SIZE);
 
-  // Brand wordmark
   ctx.fillStyle = BRAND_VIOLET;
   ctx.beginPath();
   ctx.arc(cx - 118, 96, 13, 0, Math.PI * 2);
@@ -56,7 +42,6 @@ function draw(canvas: HTMLCanvasElement, entry: HistoryEntry): void {
   ctx.textBaseline = 'middle';
   ctx.fillText('Ghost Job Detector', cx - 92, 98);
 
-  // Gauge geometry (270° arc, gap at bottom)
   const gcx = cx;
   const gcy = 470;
   const r = 230;
@@ -65,7 +50,6 @@ function draw(canvas: HTMLCanvasElement, entry: HistoryEntry): void {
   const sweep = (270 * Math.PI) / 180;
   const frac = Math.max(0, Math.min(100, response.score)) / 100;
 
-  // Track
   ctx.lineCap = 'round';
   ctx.lineWidth = lw;
   ctx.strokeStyle = 'rgba(255,255,255,0.12)';
@@ -73,7 +57,6 @@ function draw(canvas: HTMLCanvasElement, entry: HistoryEntry): void {
   ctx.arc(gcx, gcy, r, start, start + sweep);
   ctx.stroke();
 
-  // Value arc (verdict gradient)
   const grad = ctx.createLinearGradient(gcx - r, gcy - r, gcx + r, gcy + r);
   grad.addColorStop(0, v.from);
   grad.addColorStop(1, v.to);
@@ -82,7 +65,6 @@ function draw(canvas: HTMLCanvasElement, entry: HistoryEntry): void {
   ctx.arc(gcx, gcy, r, start, start + sweep * frac);
   ctx.stroke();
 
-  // Score numeral
   ctx.textAlign = 'center';
   ctx.fillStyle = '#f4f4f8';
   ctx.font = '700 168px Inter, system-ui, sans-serif';
@@ -91,7 +73,6 @@ function draw(canvas: HTMLCanvasElement, entry: HistoryEntry): void {
   ctx.fillStyle = '#5c5d6e';
   ctx.fillText('/ 100', gcx, gcy + 120);
 
-  // Verdict pill
   ctx.font = '700 46px Inter, system-ui, sans-serif';
   const word = v.word.toUpperCase();
   const wMetrics = ctx.measureText(word);
@@ -114,13 +95,11 @@ function draw(canvas: HTMLCanvasElement, entry: HistoryEntry): void {
   ctx.textAlign = 'left';
   ctx.fillText(word, pillX + 72, pillY + pillH / 2 + 2);
 
-  // One-line verdict (wrapped)
   ctx.textAlign = 'center';
   ctx.fillStyle = '#c2c3cf';
   ctx.font = '500 38px Inter, system-ui, sans-serif';
   wrapText(ctx, v.line, cx, 870, 880, 50);
 
-  // Posting title
   ctx.fillStyle = '#8b8c9b';
   ctx.font = '500 30px Inter, system-ui, sans-serif';
   const sub = [posting.title, posting.company].filter(Boolean).join(' — ');
@@ -168,7 +147,6 @@ export function ShareCard({ entry, onClose }: { entry: HistoryEntry; onClose: ()
     void (document.fonts?.ready ?? Promise.resolve()).then(() => {
       if (canvasRef.current) draw(canvasRef.current, entry);
     });
-    // draw immediately too (font fallback) so there's never a blank frame
     draw(canvas, entry);
   }, [entry]);
 
@@ -214,7 +192,6 @@ export function ShareCard({ entry, onClose }: { entry: HistoryEntry; onClose: ()
       aria-modal="true"
       aria-label="Share this verdict"
       onClick={(e) => {
-        // Close only when the backdrop itself is clicked, not the card.
         if (e.target === e.currentTarget) onClose();
       }}
       style={{

@@ -1,17 +1,7 @@
-/**
- * ResultHero — the gauge block: posting heading, the animated TrustGauge, the
- * spring-in verdict pill, and the one-line plain-language verdict. Shared by the
- * popup and the side-panel; callers place the signal list + actions around it.
- *
- * A "demo sample" chip is shown when the analysis came from a fixture
- * (meta.usedAi === false && model === 'demo-fixture') so demo entries are never
- * mistaken for live ones.
- */
-
 import type { HistoryEntry } from '@/src/lib/messages';
-import { VERDICTS } from './verdict';
 import { TrustGauge } from './TrustGauge';
 import { VerdictPill } from './VerdictPill';
+import { VERDICTS } from './verdict';
 
 interface ResultHeroProps {
   entry: HistoryEntry;
@@ -34,7 +24,6 @@ export function ResultHero({ entry, animate, reducedMotion, gaugeSize = 200 }: R
         textAlign: 'center',
       }}
     >
-      {/* Posting heading */}
       <div style={{ maxWidth: 320 }}>
         <h2
           style={{
@@ -72,7 +61,6 @@ export function ResultHero({ entry, animate, reducedMotion, gaugeSize = 200 }: R
         </p>
       </div>
 
-      {/* Gauge */}
       <div style={{ marginTop: 10 }}>
         <TrustGauge
           score={response.score}
@@ -83,12 +71,10 @@ export function ResultHero({ entry, animate, reducedMotion, gaugeSize = 200 }: R
         />
       </div>
 
-      {/* Pill */}
       <div style={{ marginTop: -8 }}>
         <VerdictPill band={response.risk} animate={animate} reducedMotion={reducedMotion} />
       </div>
 
-      {/* One-line verdict */}
       <p
         style={{
           margin: '12px 0 0',

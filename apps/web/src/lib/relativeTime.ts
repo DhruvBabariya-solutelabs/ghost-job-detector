@@ -1,25 +1,3 @@
-/**
- * relativeTime — turn a unix-millis timestamp into a short human label.
- *
- * Output forms (matches the extension popup precedent + Phase 5 UI-SPEC
- * §`/dashboard` page line 310):
- *   < 60 seconds: 'just now'
- *   < 60 minutes: '{N}m ago'
- *   < 24 hours:   '{N}h ago'
- *   < 48 hours:   'yesterday'
- *   < 7 days:     '{Mon|Tue|Wed|...}'  (weekday short)
- *   < 365 days:   '{Mon} {DD}'         (e.g. 'Mar 5')
- *   ≥ 365 days:   '{Mon} {DD}, {YYYY}' (e.g. 'Mar 5, 2024')
- *
- * Pure — no localStorage, no Intl side effects. Accepts an optional `now`
- * for testability (defaults to Date.now()).
- *
- * Under noUncheckedIndexedAccess, WEEKDAY[date.getDay()] is `string | undefined`;
- * the `?? 'Unknown'` fallback is required (matches Phase 4 popup helper precedent).
- * WEEKDAY ordering follows JS `Date.prototype.getDay()` which returns 0-6
- * starting with Sunday.
- */
-
 const WEEKDAY = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
 const MONTH = [
   'Jan',
@@ -36,10 +14,7 @@ const MONTH = [
   'Dec',
 ] as const;
 
-export function relativeTime(
-  timestamp: number,
-  now: number = Date.now(),
-): string {
+export function relativeTime(timestamp: number, now: number = Date.now()): string {
   const delta = Math.max(0, now - timestamp);
   const seconds = Math.floor(delta / 1000);
   if (seconds < 60) return 'just now';

@@ -1,11 +1,5 @@
-/**
- * Builds the WXT extension, zips it, and copies the zip to apps/web/public/
- * so Next.js can serve it at /extension.zip for the Install page download.
- *
- * Run automatically via the "prebuild" script in apps/web/package.json.
- */
 import { execSync } from 'child_process';
-import { mkdirSync, readdirSync, copyFileSync } from 'fs';
+import { copyFileSync, mkdirSync, readdirSync } from 'fs';
 import { join, resolve } from 'path';
 import { fileURLToPath } from 'url';
 

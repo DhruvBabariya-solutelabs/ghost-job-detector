@@ -1,8 +1,3 @@
-/**
- * Brand lockup — violet line-art ghost glyph + wordmark. The glyph uses the
- * constant brand violet (never recolours to the verdict).
- */
-
 import { BRAND_VIOLET } from './verdict';
 
 export function BrandMark({ size = 22 }: { size?: number }) {

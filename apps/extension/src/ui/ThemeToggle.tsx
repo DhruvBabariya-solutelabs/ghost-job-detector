@@ -1,7 +1,5 @@
-/** Theme toggle — sun in dark mode (tap → light), moon in light mode. */
-
 import { IconButton } from './IconButton';
-import { SunIcon, MoonIcon } from './icons';
+import { MoonIcon, SunIcon } from './icons';
 import { useTheme } from './useTheme';
 
 export function ThemeToggle() {

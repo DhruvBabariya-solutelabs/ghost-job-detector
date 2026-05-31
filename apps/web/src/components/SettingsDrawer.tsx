@@ -1,45 +1,10 @@
 'use client';
 
-/**
- * SettingsDrawer — right-side drawer (≥768px) / bottom-sheet (<768px).
- *
- * Spec: CONTEXT D-66 + D-72 + UI-SPEC §"SettingsDrawer" lines 346-411 +
- * §"Tailwind Class Examples" lines 1278-1319 + §"State Matrix" lines 970-989.
- *
- * Phase 5 ports the extension options page (apps/extension/entrypoints/options/App.tsx)
- * BYOK + Save + Test Key + Privacy disclosure UI verbatim — swapping the
- * chrome.storage.local gateway for the apps/web/src/lib/storage.ts gateway
- * (Plan 05-02). EXT-16 invariant carries forward: the 3-paragraph privacy
- * disclosure tracks the extension's text, swapping the storage backing
- * ("localStorage" vs "chrome.storage.local") and the provider name
- * (OpenRouter, 2026-05).
- *
- * Pitfall 6 (D-52) invariants — verified by grep:
- *   - Save button DISABLED when input === savedKey OR trimmedInput empty.
- *   - Test button DISABLED when no saved key OR input differs from saved.
- *   - Test handler would send `savedKey` (NOT `input`/`trimmedInput`) — in
- *     Phase 5 it stubs success after 400ms; Phase 6 wires the real fetch.
- *
- * Security gates (verified by grep):
- *   - No console output of any level anywhere (T-05-16).
- *   - No lucide-react import — eye/eye-off/X glyphs inline (UI-SPEC line 31).
- *   - localStorage access ONLY via lib/storage.ts gateway (T-05-05).
- */
-
 import { useEffect, useRef, useState } from 'react';
 import { getApiKey, setApiKey } from '@/lib/storage';
 
-/**
- * Drawer width in pixels at ≥lg (desktop). Exported so AppShell can shift the
- * page content by exactly this much when the drawer is open — keeps the two
- * surfaces in sync without two sources of truth.
- */
 export const DRAWER_WIDTH_PX = 380;
 
-/** Tailwind breakpoint at which the drawer switches from bottom-sheet to
- * pushing-sidebar. Must match the @media in AppShell. Chosen at 1280px so the
- * remaining content area is ≥900px — enough for /analyze's two-column layout
- * (textarea + 440px result block) to not feel squeezed when the drawer pushes. */
 const DRAWER_DESKTOP_BREAKPOINT_PX = 1280;
 
 export interface SettingsDrawerProps {
@@ -62,8 +27,6 @@ type SaveStatus =
   | { kind: 'error_quota' }
   | { kind: 'error_unavailable' };
 
-// D-51: format-check regex. Used informationally (does NOT block save).
-// OpenRouter keys have the form `sk-or-v1-<hex>`.
 const KEY_REGEX = /^sk-or-v1-[A-Za-z0-9_-]{20,}$/;
 
 export function SettingsDrawer({ open, onClose }: SettingsDrawerProps) {
@@ -74,25 +37,18 @@ export function SettingsDrawer({ open, onClose }: SettingsDrawerProps) {
   const [saveStatus, setSaveStatus] = useState<SaveStatus>({ kind: 'idle' });
   const keyInputRef = useRef<HTMLInputElement | null>(null);
 
-  // D-51: silently sanitize on read for comparison (does NOT rewrite state until blur).
   const trimmedInput = input.trim().replace(/^["']|["']$/g, '');
   const isFormatOk = KEY_REGEX.test(trimmedInput);
   const hasUnsavedChange = trimmedInput !== (savedKey ?? '');
   const saveDisabled = !hasUnsavedChange || trimmedInput.length === 0;
-  // Pitfall 6 mitigation: Test disabled when no saved key OR input differs from saved.
-  const testDisabled =
-    savedKey === null || hasUnsavedChange || testStatus.kind === 'testing';
+  const testDisabled = savedKey === null || hasUnsavedChange || testStatus.kind === 'testing';
 
-  // Initial load — synchronous Plan 05-02 gateway (web localStorage, not async chrome.storage).
   useEffect(() => {
     const k = getApiKey();
     setSavedKeyState(k);
     if (k !== null) setInput(k);
   }, []);
 
-  // Focus + Escape + body-scroll handling on drawer open. Body scroll is
-  // locked ONLY on mobile (where the drawer is a modal bottom-sheet). On
-  // desktop the drawer is a pushing sidebar — page should remain scrollable.
   useEffect(() => {
     if (!open) return;
 
@@ -107,7 +63,7 @@ export function SettingsDrawer({ open, onClose }: SettingsDrawerProps) {
     document.addEventListener('keydown', handleEscape);
 
     const isMobile = window.matchMedia(
-      `(max-width: ${DRAWER_DESKTOP_BREAKPOINT_PX - 1}px)`
+      `(max-width: ${DRAWER_DESKTOP_BREAKPOINT_PX - 1}px)`,
     ).matches;
     const previousOverflow = document.body.style.overflow;
     if (isMobile) {
@@ -124,10 +80,7 @@ export function SettingsDrawer({ open, onClose }: SettingsDrawerProps) {
   }, [open, onClose]);
 
   const handleBlur = (): void => {
-    // D-51: silent sanitization on blur — no toast, no warning.
     if (input !== trimmedInput) setInput(trimmedInput);
-    // Accessibility defense: revert to password mask on blur so a user who
-    // alt-tabs away doesn't leave the unmasked key on screen.
     if (revealed) setRevealed(false);
   };
 
@@ -137,7 +90,6 @@ export function SettingsDrawer({ open, onClose }: SettingsDrawerProps) {
     if (result.kind === 'ok') {
       setSavedKeyState(trimmedInput);
       setSaveStatus({ kind: 'saved' });
-      // Auto-revert to idle after 3 seconds (UI-SPEC State Matrix line 983).
       setTimeout(() => setSaveStatus({ kind: 'idle' }), 3000);
     } else if (result.kind === 'quota_exceeded') {
       setSaveStatus({ kind: 'error_quota' });
@@ -149,21 +101,14 @@ export function SettingsDrawer({ open, onClose }: SettingsDrawerProps) {
   const handleTest = (): void => {
     if (savedKey === null) return;
     setTestStatus({ kind: 'testing' });
-    // Phase 5 stub: simulate success after 400ms so the UI control is testable.
-    // Phase 6 replaces this with a real fetch to api.openai.com — the Pitfall 6
-    // invariant (send savedKey, NEVER input/trimmedInput) carries forward there.
     setTimeout(() => {
       setTestStatus({ kind: 'success' });
-      // Success auto-reverts after 4 seconds; errors stay STICKY per UI-SPEC line 986-989.
       setTimeout(() => setTestStatus({ kind: 'idle' }), 4000);
     }, 400);
   };
 
   return (
     <>
-      {/* Backdrop — only mobile/tablet (<lg). On desktop the drawer is a
-          pushing sidebar with no modal overlay; clicking the gear/X closes it.
-          Always mounted so the opacity transition runs on open/close. */}
       <div
         className={[
           'fixed inset-0 z-[150] bg-black/50 backdrop-blur-sm transition-opacity duration-200 ease-out xl:hidden',
@@ -179,11 +124,7 @@ export function SettingsDrawer({ open, onClose }: SettingsDrawerProps) {
           'fixed z-[200] bg-[--color-surface-elevated] border-l border-[--color-border] shadow-[--shadow-overlay]',
           'overflow-y-auto px-5 py-5 xl:px-6 xl:py-6',
           'transition-transform duration-300',
-          // <xl: bottom-sheet (mobile + tablet + smaller laptops)
           'bottom-0 left-0 right-0 w-full max-h-[85vh] rounded-t-xl',
-          // ≥xl (1280px): pushing sidebar — slides in below the 48px topbar.
-          // Width is hard-coded to 380px to match DRAWER_WIDTH_PX (consumed by
-          // AppShell for the page content shift).
           'xl:top-12 xl:bottom-0 xl:right-0 xl:left-auto xl:w-[380px] xl:max-h-[calc(100vh-3rem)] xl:rounded-none',
           open
             ? 'translate-y-0 xl:translate-y-0 xl:translate-x-0'
@@ -192,19 +133,13 @@ export function SettingsDrawer({ open, onClose }: SettingsDrawerProps) {
         style={{ transitionTimingFunction: 'cubic-bezier(0.25, 1, 0.5, 1)' }}
         inert={!open || undefined}
       >
-        {/* Mobile drag-handle affordance (purely visual — actual swipe-to-dismiss
-            is deferred; this just hints "this is a sheet" and reduces the
-            "where do I close it" friction). Hidden on desktop. */}
         <div
           className="xl:hidden mx-auto mb-3 w-10 h-1 rounded-full bg-[--color-border]"
           aria-hidden="true"
         />
 
-        {/* Header */}
         <div className="flex items-center justify-between pb-4 mb-2 border-b border-[--color-border]">
-          <h2 className="text-2xl font-semibold text-[--color-ink] tracking-tight">
-            Settings
-          </h2>
+          <h2 className="text-2xl font-semibold text-[--color-ink] tracking-tight">Settings</h2>
           <button
             type="button"
             onClick={onClose}
@@ -215,7 +150,6 @@ export function SettingsDrawer({ open, onClose }: SettingsDrawerProps) {
           </button>
         </div>
 
-        {/* Section 1: OpenRouter API key */}
         <section className="mt-6">
           <h3 className="text-xs font-mono uppercase tracking-[0.18em] text-[--color-ink-muted] mb-4">
             OpenRouter API key
@@ -232,10 +166,7 @@ export function SettingsDrawer({ open, onClose }: SettingsDrawerProps) {
             </a>{' '}
             — pay-as-you-go, no minimums.
           </p>
-          <label
-            htmlFor="gjd-key-input"
-            className="block text-sm font-semibold mt-3 mb-1"
-          >
+          <label htmlFor="gjd-key-input" className="block text-sm font-semibold mt-3 mb-1">
             Your key
           </label>
           <div className="relative">
@@ -261,14 +192,13 @@ export function SettingsDrawer({ open, onClose }: SettingsDrawerProps) {
             </button>
           </div>
           <p className="text-xs text-[--color-ink-muted] mt-2">
-            Used only for AI-powered signals (authenticity + AI-generated-text
-            detection). Stored locally in this browser. Never sent to our
-            servers.
+            Used only for AI-powered signals (authenticity + AI-generated-text detection). Stored
+            locally in this browser. Never sent to our servers.
           </p>
           {!isFormatOk && trimmedInput.length > 0 && (
             <p className="text-xs text-[--color-ink-muted] mt-1">
-              This doesn't look like a standard OpenRouter key (sk-or-v1-…).
-              Testing anyway will hit the API.
+              This doesn't look like a standard OpenRouter key (sk-or-v1-…). Testing anyway will hit
+              the API.
             </p>
           )}
           <div className="mt-2 flex gap-2 items-center">
@@ -296,9 +226,7 @@ export function SettingsDrawer({ open, onClose }: SettingsDrawerProps) {
               {testStatus.kind === 'testing' ? 'Testing…' : 'Test key'}
             </button>
             {saveStatus.kind === 'saved' && (
-              <span className="text-xs text-[--color-ink-muted] ml-2">
-                Saved.
-              </span>
+              <span className="text-xs text-[--color-ink-muted] ml-2">Saved.</span>
             )}
           </div>
           {saveStatus.kind === 'error_quota' && (
@@ -330,8 +258,8 @@ export function SettingsDrawer({ open, onClose }: SettingsDrawerProps) {
                 color: '#b91c1c',
               }}
             >
-              That key isn't valid. Double-check it starts with sk-or-v1- and
-              you copied the whole thing.
+              That key isn't valid. Double-check it starts with sk-or-v1- and you copied the whole
+              thing.
             </div>
           )}
           {testStatus.kind === 'rate_limit' && (
@@ -358,7 +286,6 @@ export function SettingsDrawer({ open, onClose }: SettingsDrawerProps) {
           )}
         </section>
 
-        {/* Section 2: Privacy disclosure (EXT-16) — VERBATIM from apps/extension/entrypoints/options/App.tsx lines 222-249 */}
         <section className="mt-8">
           <h3 className="text-xs font-mono uppercase tracking-[0.18em] text-[--color-ink-muted] mb-3">
             Privacy &amp; data
@@ -367,28 +294,25 @@ export function SettingsDrawer({ open, onClose }: SettingsDrawerProps) {
             <div>
               <p className="font-semibold">What gets sent</p>
               <p>
-                When you analyze a job, this extension sends the title, company,
-                location, and description text to ghost-job-detector.vercel.app.
-                We never send the URL of the page you're on, and we never log
-                your OpenRouter key.
+                When you analyze a job, this extension sends the title, company, location, and
+                description text to ghost-job-detector.vercel.app. We never send the URL of the page
+                you're on, and we never log your OpenRouter key.
               </p>
             </div>
             <div>
               <p className="font-semibold">Where your key lives</p>
               <p>
-                Your OpenRouter key is stored in <code>localStorage</code> on
-                this device only. It never leaves your browser except for the
-                one direct call to openrouter.ai/api/v1/auth/key to verify it
-                works (the "Test key" button) and the per-analysis calls when
-                you view a job.
+                Your OpenRouter key is stored in <code>localStorage</code> on this device only. It
+                never leaves your browser except for the one direct call to
+                openrouter.ai/api/v1/auth/key to verify it works (the "Test key" button) and the
+                per-analysis calls when you view a job.
               </p>
             </div>
             <div>
               <p className="font-semibold">What we don't do</p>
               <p>
-                No accounts. No tracking. No analytics. No cross-device sync. No
-                selling anything. If you uninstall the extension, your key and
-                history are gone.
+                No accounts. No tracking. No analytics. No cross-device sync. No selling anything.
+                If you uninstall the extension, your key and history are gone.
               </p>
             </div>
           </div>
@@ -398,9 +322,6 @@ export function SettingsDrawer({ open, onClose }: SettingsDrawerProps) {
   );
 }
 
-// Inline SVG glyphs — UI-SPEC line 31 forbids lucide-react. Static JSX, no
-// dangerouslySetInnerHTML, so React's escaping defends against any XSS attempt
-// even though these are author-controlled (T-04-54 mitigation pattern).
 function EyeIcon() {
   return (
     <svg

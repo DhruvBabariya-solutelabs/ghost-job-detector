@@ -1,27 +1,10 @@
 'use client';
 
-/**
- * Hero (landing) — Linear-inspired dark hero with aurora glow + spring motion.
- *
- * Now a client component because framer-motion runs in the client. The
- * single-ScoreDial invariant (UI-SPEC line 256) is still preserved — only
- * DemoSection mounts the dial, in its `compact` form.
- *
- * Aesthetic: dark surface, radial brand aurora behind the headline, gradient
- * hairline border on the demo panel, stagger-reveal of headline blocks via
- * framer-motion with an ease-out-quart curve. Hover/press states use spring
- * scale + brand-glow shadow.
- *
- * Reduced-motion is handled at two layers: framer-motion respects the
- * `useReducedMotion` hook, and globals.css force-disables transitions/animations
- * for users who set `prefers-reduced-motion: reduce`.
- */
-
-import Link from 'next/link';
 import { motion, useReducedMotion, type Variants } from 'framer-motion';
 import { ArrowRight, Check } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 import { DemoSection } from '@/components/DemoSection';
+import { Button } from '@/components/ui/button';
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -64,10 +47,7 @@ export function Hero() {
         animate="visible"
       >
         <div className="flex flex-col gap-5 md:gap-7">
-          <motion.div
-            variants={itemVariants}
-            className="flex items-center gap-2.5"
-          >
+          <motion.div variants={itemVariants} className="flex items-center gap-2.5">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[--color-brand-glow] opacity-50" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-[--color-brand]" />
@@ -95,8 +75,8 @@ export function Hero() {
             variants={itemVariants}
             className="text-lg md:text-xl text-[--color-ink-muted] leading-[1.5] max-w-[540px]"
           >
-            A trust score for every job posting on LinkedIn and Indeed, before
-            you spend an hour writing a cover letter.
+            A trust score for every job posting on LinkedIn and Indeed, before you spend an hour
+            writing a cover letter.
           </motion.p>
 
           <motion.div
@@ -137,12 +117,10 @@ export function Hero() {
         </div>
 
         <motion.div variants={demoVariants} className="relative md:pl-2 lg:pl-4">
-          {/* Outer glow */}
           <div
             aria-hidden="true"
             className="absolute -inset-4 rounded-2xl bg-gradient-to-b from-[--color-brand-glow]/20 to-transparent blur-2xl pointer-events-none"
           />
-          {/* Panel with gradient hairline */}
           <div className="relative ring-hairline rounded-xl bg-[--color-surface-elevated]/80 backdrop-blur-sm border border-[--color-border] p-6 md:p-7 shadow-[--shadow-elevation-2]">
             <DemoSection compact />
           </div>

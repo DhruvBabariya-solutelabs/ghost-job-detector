@@ -1,9 +1,3 @@
-/**
- * Scan history — newest-first rows of past analyses. Each row: a score chip
- * tinted to the verdict, the posting title, and relative time. Click a row to
- * load it into the hero. The active row is highlighted.
- */
-
 import type { HistoryEntry } from '@/src/lib/messages';
 import { VERDICTS } from './verdict';
 
@@ -11,7 +5,6 @@ interface HistoryListProps {
   entries: HistoryEntry[];
   selectedId: string | null;
   onSelect: (entry: HistoryEntry) => void;
-  /** Cap rows (popup); side-panel passes Infinity. */
   limit?: number;
 }
 
