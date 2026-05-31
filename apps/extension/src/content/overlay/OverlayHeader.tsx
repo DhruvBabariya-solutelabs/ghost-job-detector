@@ -1,0 +1,85 @@
+/**
+ * OverlayHeader — 44px-tall header bar at the top of the overlay container.
+ *
+ * Layout (post-heuristics-pill removal):
+ *   [👻 Ghost Job Detector] ............................. [×]
+ *    icon + wordmark                          dismiss button (32×32)
+ *
+ * Hard constraints (unchanged):
+ *   - Icons are inline SVG — NO icon-library import (UI-SPEC §"Design System").
+ *   - X-dismiss carries explicit aria-label + focus-visible ring.
+ */
+
+interface IconProps {
+  className?: string;
+}
+
+/** Inline X glyph — 16x16 viewBox with two diagonal stroke lines. */
+function XIcon({ className }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      strokeLinecap="round"
+      aria-hidden="true"
+    >
+      <path d="M4 4 L12 12" />
+      <path d="M12 4 L4 12" />
+    </svg>
+  );
+}
+
+/**
+ * Ghost glyph — 18x18, brand-tinted. Two-tone: a soft brand fill (12% alpha)
+ * behind a 1.4-stroke outline so it reads as a logo, not a clipart icon.
+ */
+function GhostIcon({ className }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 18 18"
+      className={className}
+      aria-hidden="true"
+    >
+      <path
+        d="M3 14.5V8a6 6 0 0 1 12 0v6.5c0 .35-.4.55-.7.3l-1.55-1.25-1.6 1.3c-.22.18-.55.18-.77 0L9 13.55l-1.38 1.3c-.22.18-.55.18-.77 0L5.25 13.55 3.7 14.8c-.3.25-.7.05-.7-.3z"
+        fill="color-mix(in oklch, var(--color-brand) 14%, transparent)"
+        stroke="var(--color-brand)"
+        strokeWidth={1.4}
+        strokeLinejoin="round"
+      />
+      <circle cx={7} cy={8} r={0.85} fill="var(--color-brand)" />
+      <circle cx={11} cy={8} r={0.85} fill="var(--color-brand)" />
+    </svg>
+  );
+}
+
+export interface OverlayHeaderProps {
+  onDismiss: () => void;
+}
+
+export function OverlayHeader({ onDismiss }: OverlayHeaderProps) {
+  return (
+    <header
+      className="h-11 pl-3 pr-2 flex items-center justify-between border-b border-(--color-border) bg-(--color-surface)"
+      style={{ backgroundColor: 'var(--color-surface, #fcfcfd)' }}
+    >
+      <div className="flex items-center gap-2 min-w-0">
+        <GhostIcon className="w-[18px] h-[18px] shrink-0" />
+        <span className="text-[13px] font-semibold tracking-tight text-(--color-ink) truncate">
+          Ghost Job Detector
+        </span>
+      </div>
+      <button
+        type="button"
+        onClick={onDismiss}
+        aria-label="Dismiss Ghost Job Detector overlay"
+        className="w-8 h-8 grid place-items-center rounded-md text-(--color-ink-muted) hover:bg-(--color-surface-subtle) hover:text-(--color-ink) transition-colors focus:outline-none focus-visible:ring-[3px] focus-visible:ring-[oklch(0.55_0.18_260/0.4)]"
+      >
+        <XIcon className="w-4 h-4" />
+      </button>
+    </header>
+  );
+}

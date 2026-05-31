@@ -1,0 +1,53 @@
+/*
+ * Shadow-DOM stylesheet entry — compiled by Tailwind v4 (@tailwindcss/vite)
+ * and injected into the closed shadow root via WXT's cssInjectionMode: 'ui'.
+ *
+ * CRITICAL: :host { font-size: 16px } anchors Tailwind's rem units to a fixed
+ * 16px baseline INSIDE the shadow root regardless of the host page setting
+ * html { font-size: 62.5% } or similar (LinkedIn does this). Without this rule,
+ * `text-base` (1rem) resolves to 10px on LinkedIn and the overlay collapses.
+ * RESEARCH Pitfall 1 — load-bearing.
+ *
+ * @source directive tells Tailwind to scan the content-script entrypoints
+ * tree for utility class usage — without it, JIT mode misses any class
+ * referenced only inside React JSX strings.
+ */
+
+@import "@ghost/shared/theme.css";
+
+@source "../content/**/*.{ts,tsx}";
+@source "../../entrypoints/content.ts";
+
+:host {
+  font-size: 16px;
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  line-height: 1.5;
+}
+
+/*
+ * GPU-promotion hint for the ScoreDial indicator circle — defense-in-depth
+ * alongside the inline style={{ willChange: 'transform' }} on the React
+ * element. Targets only the indicator circle via [data-indicator] to avoid
+ * promoting the background track circle unnecessarily.
+ *
+ * The inline style is the primary signal; this CSS rule guards against host
+ * pages (e.g. LinkedIn) that might override inline styles via !important resets
+ * on SVG elements. Inside a closed Shadow DOM the risk is very low, but the
+ * rule costs nothing and reinforces the GPU-layer intent.
+ */
+circle[data-indicator] {
+  will-change: transform;
+}
+
+/*
+ * Prefers-reduced-motion: when the user opts out of motion, kill all
+ * transitions and animations inside the shadow root in one shot. Per
+ * UI-SPEC §"Accessibility Checklist" line 612.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
